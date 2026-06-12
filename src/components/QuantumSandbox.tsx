@@ -15,7 +15,7 @@ export const QuantumSandbox: React.FC<Props> = ({ strategy, setStrategy, isActiv
     };
 
     const loadOptimal = () => {
-        setStrategy({ a0: 0, a1: 90, b0: 45, b1: -45 });
+        setStrategy({ a0: 0, a1: 45, b0: 22.5, b1: -22.5 });
     };
 
     return (

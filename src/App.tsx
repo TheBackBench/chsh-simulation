@@ -15,7 +15,7 @@ function App() {
         alice0: true, alice1: true, bob0: true, bob1: true
     });
     const [quantumStrategy, setQuantumStrategy] = useState<QuantumStrategy>({
-        a0: 0, a1: 90, b0: 45, b1: -45
+        a0: 0, a1: 45, b0: 22.5, b1: -22.5
     });
 
     const handleRun = async () => {
@@ -118,15 +118,15 @@ function App() {
                                 <div 
                                     className="result-card glass-panel highlight"
                                     style={mode === 'quantum' && result.rate > 76 ? {
-                                        borderColor: 'var(--quantum-magenta)',
-                                        boxShadow: '0 0 20px var(--quantum-magenta-dim)'
+                                        borderColor: 'var(--quantum-indigo)',
+                                        boxShadow: '0 0 20px var(--quantum-indigo-dim)'
                                     } : {}}
                                 >
                                     <span className="label">Success Rate</span>
                                     <span 
                                         className="value"
                                         style={mode === 'quantum' && result.rate > 76 ? {
-                                            background: 'linear-gradient(90deg, var(--quantum-magenta), #ff66ff)',
+                                            background: 'linear-gradient(90deg, var(--quantum-indigo), #ff66ff)',
                                             WebkitBackgroundClip: 'text',
                                             WebkitTextFillColor: 'transparent'
                                         } : {}}

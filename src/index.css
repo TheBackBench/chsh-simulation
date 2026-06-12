@@ -3,12 +3,12 @@
     --text-main: #e2e8f0;
     --text-muted: #94a3b8;
     
-    --accent-cyan: #00f2fe;
-    --accent-cyan-dim: rgba(0, 242, 254, 0.2);
-    --accent-purple: #4facfe;
+    --accent-teal: #00fe8c;
+    --accent-teal-dim: rgba(0, 242, 254, 0.2);
+    --accent-purple: #894ffe;
     
-    --quantum-magenta: #ff00ff;
-    --quantum-magenta-dim: rgba(255, 0, 255, 0.2);
+    --quantum-indigo: #a600ff;
+    --quantum-indigo-dim: rgba(166, 0, 255, 0.2);
     
     --glass-bg: rgba(15, 23, 42, 0.6);
     --glass-border: rgba(255, 255, 255, 0.1);
@@ -64,10 +64,10 @@ header {
 .glow-text {
     font-size: 3rem;
     font-weight: 700;
-    background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+    background: linear-gradient(90deg, var(--accent-teal), var(--accent-purple));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    text-shadow: 0 0 20px var(--accent-cyan-dim);
+    text-shadow: 0 0 20px var(--accent-teal-dim);
     margin-bottom: 0.5rem;
 }
 
@@ -102,14 +102,14 @@ header {
 }
 
 .mode-btn.active {
-    background: var(--accent-cyan-dim);
-    border-color: var(--accent-cyan);
-    box-shadow: 0 0 15px var(--accent-cyan-dim);
+    background: var(--accent-teal-dim);
+    border-color: var(--accent-teal);
+    box-shadow: 0 0 15px var(--accent-teal-dim);
 }
 #btn-quantum.active {
-    background: var(--quantum-magenta-dim);
-    border-color: var(--quantum-magenta);
-    box-shadow: 0 0 15px var(--quantum-magenta-dim);
+    background: var(--quantum-indigo-dim);
+    border-color: var(--quantum-indigo);
+    box-shadow: 0 0 15px var(--quantum-indigo-dim);
 }
 
 /* Sandboxes */
@@ -168,13 +168,13 @@ header {
 .player-card h3 {
     text-align: center;
     margin-bottom: 1.5rem;
-    color: var(--accent-cyan);
+    color: var(--accent-teal);
     border-bottom: 1px solid var(--glass-border);
     padding-bottom: 0.5rem;
 }
 
 .player-card.quantum h3 {
-    color: var(--quantum-magenta);
+    color: var(--quantum-indigo);
 }
 
 .input-group {
@@ -209,11 +209,11 @@ select, input[type="number"] {
 }
 
 select:focus, input[type="number"]:focus {
-    border-color: var(--accent-cyan);
+    border-color: var(--accent-teal);
 }
 
 .quantum select:focus, .quantum input[type="number"]:focus {
-    border-color: var(--quantum-magenta);
+    border-color: var(--quantum-indigo);
 }
 
 .angle-input {
@@ -230,7 +230,7 @@ select:focus, input[type="number"]:focus {
     flex: 1;
 }
 .angle-input:focus-within {
-    border-color: var(--quantum-magenta);
+    border-color: var(--quantum-indigo);
 }
 
 .entanglement-link {
@@ -253,13 +253,13 @@ select:focus, input[type="number"]:focus {
 }
 
 .entanglement-link.glowing .link-line {
-    background: var(--quantum-magenta);
-    box-shadow: 0 0 10px var(--quantum-magenta);
+    background: var(--quantum-indigo);
+    box-shadow: 0 0 10px var(--quantum-indigo);
     animation: pulseLink 2s infinite;
 }
 .entanglement-link.glowing span {
-    color: var(--quantum-magenta);
-    text-shadow: 0 0 5px var(--quantum-magenta-dim);
+    color: var(--quantum-indigo);
+    text-shadow: 0 0 5px var(--quantum-indigo-dim);
 }
 
 @keyframes pulseLink {
@@ -275,15 +275,15 @@ select:focus, input[type="number"]:focus {
 
 .secondary-btn {
     background: transparent;
-    border: 1px solid var(--quantum-magenta);
-    color: var(--quantum-magenta);
+    border: 1px solid var(--quantum-indigo);
+    color: var(--quantum-indigo);
     padding: 0.5rem 1rem;
     border-radius: 20px;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 .secondary-btn:hover {
-    background: var(--quantum-magenta-dim);
+    background: var(--quantum-indigo-dim);
 }
 
 /* Simulation Controls */
@@ -370,8 +370,8 @@ select:focus, input[type="number"]:focus {
 .progress-bar {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, var(--accent-cyan), var(--quantum-magenta));
-    box-shadow: 0 0 10px var(--accent-cyan);
+    background: linear-gradient(90deg, var(--accent-teal), var(--quantum-indigo));
+    box-shadow: 0 0 10px var(--accent-teal);
     transition: width 0.1s linear;
 }
 
@@ -427,11 +427,11 @@ select:focus, input[type="number"]:focus {
 }
 
 .result-card.highlight {
-    border-color: var(--accent-cyan);
-    box-shadow: 0 0 20px var(--accent-cyan-dim);
+    border-color: var(--accent-teal);
+    box-shadow: 0 0 20px var(--accent-teal-dim);
 }
 .result-card.highlight .value {
-    background: linear-gradient(90deg, var(--accent-cyan), #4facfe);
+    background: linear-gradient(90deg, var(--accent-teal), #4facfe);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -462,6 +462,6 @@ select:focus, input[type="number"]:focus {
 }
 
 .quantum-text {
-    color: var(--quantum-magenta);
-    text-shadow: 0 0 5px var(--quantum-magenta-dim);
+    color: var(--quantum-indigo);
+    text-shadow: 0 0 5px var(--quantum-indigo-dim);
 }
