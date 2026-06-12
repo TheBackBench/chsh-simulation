@@ -1,13 +1,15 @@
 import React from 'react';
 import { QuantumStrategy } from '../engine/Simulation';
+import './QuantumSandbox.css';
 
 interface Props {
     strategy: QuantumStrategy;
     setStrategy: React.Dispatch<React.SetStateAction<QuantumStrategy>>;
     isActive: boolean;
+    onHelpClick?: () => void;
 }
 
-export const QuantumSandbox: React.FC<Props> = ({ strategy, setStrategy, isActive }) => {
+export const QuantumSandbox: React.FC<Props> = ({ strategy, setStrategy, isActive, onHelpClick }) => {
     if (!isActive) return null;
 
     const handleChange = (key: keyof QuantumStrategy, value: number) => {
@@ -21,7 +23,18 @@ export const QuantumSandbox: React.FC<Props> = ({ strategy, setStrategy, isActiv
     return (
         <section id="quantum-sandbox" className="sandbox active">
             <div className="sandbox-header">
-                <h2>Quantum Entanglement Strategy</h2>
+                <h2>
+                    Quantum Entanglement Strategy
+                    {onHelpClick && (
+                        <button 
+                            className="secondary-btn help-btn"
+                            onClick={onHelpClick}
+                            title="Show Help"
+                        >
+                            ?
+                        </button>
+                    )}
+                </h2>
                 <p>Define measurement angles for Alice and Bob. They share an entangled pair of particles.</p>
             </div>
             
