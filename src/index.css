@@ -7,8 +7,8 @@
     --accent-teal-dim: rgba(0, 242, 254, 0.2);
     --accent-purple: #894ffe;
     
-    --quantum-indigo: #a600ff;
-    --quantum-indigo-dim: rgba(166, 0, 255, 0.2);
+    --quantum-pink: #d400ff;
+    --quantum-pink-dim: rgba(166, 0, 255, 0.2);
     
     --glass-bg: rgba(15, 23, 42, 0.6);
     --glass-border: rgba(255, 255, 255, 0.1);
@@ -107,9 +107,9 @@ header {
     box-shadow: 0 0 15px var(--accent-teal-dim);
 }
 #btn-quantum.active {
-    background: var(--quantum-indigo-dim);
-    border-color: var(--quantum-indigo);
-    box-shadow: 0 0 15px var(--quantum-indigo-dim);
+    background: var(--quantum-pink-dim);
+    border-color: var(--quantum-pink);
+    box-shadow: 0 0 15px var(--quantum-pink-dim);
 }
 
 /* Sandboxes */
@@ -174,7 +174,7 @@ header {
 }
 
 .player-card.quantum h3 {
-    color: var(--quantum-indigo);
+    color: var(--quantum-pink);
 }
 
 .input-group {
@@ -213,7 +213,7 @@ select:focus, input[type="number"]:focus {
 }
 
 .quantum select:focus, .quantum input[type="number"]:focus {
-    border-color: var(--quantum-indigo);
+    border-color: var(--quantum-pink);
 }
 
 .angle-input {
@@ -230,7 +230,7 @@ select:focus, input[type="number"]:focus {
     flex: 1;
 }
 .angle-input:focus-within {
-    border-color: var(--quantum-indigo);
+    border-color: var(--quantum-pink);
 }
 
 .entanglement-link {
@@ -253,13 +253,13 @@ select:focus, input[type="number"]:focus {
 }
 
 .entanglement-link.glowing .link-line {
-    background: var(--quantum-indigo);
-    box-shadow: 0 0 10px var(--quantum-indigo);
+    background: var(--quantum-pink);
+    box-shadow: 0 0 10px var(--quantum-pink);
     animation: pulseLink 2s infinite;
 }
 .entanglement-link.glowing span {
-    color: var(--quantum-indigo);
-    text-shadow: 0 0 5px var(--quantum-indigo-dim);
+    color: var(--quantum-pink);
+    text-shadow: 0 0 5px var(--quantum-pink-dim);
 }
 
 @keyframes pulseLink {
@@ -275,15 +275,15 @@ select:focus, input[type="number"]:focus {
 
 .secondary-btn {
     background: transparent;
-    border: 1px solid var(--quantum-indigo);
-    color: var(--quantum-indigo);
+    border: 1px solid var(--quantum-pink);
+    color: var(--quantum-pink);
     padding: 0.5rem 1rem;
     border-radius: 20px;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 .secondary-btn:hover {
-    background: var(--quantum-indigo-dim);
+    background: var(--quantum-pink-dim);
 }
 
 /* Simulation Controls */
@@ -309,7 +309,7 @@ select:focus, input[type="number"]:focus {
 
 .run-btn {
     position: relative;
-    background: linear-gradient(45deg, #00f2fe, #4facfe);
+    background: linear-gradient(45deg, #00fe8c, #00c56c);
     border: none;
     color: white;
     padding: 1rem 3rem;
@@ -329,6 +329,10 @@ select:focus, input[type="number"]:focus {
     transform: scale(0.95);
 }
 
+.run-btn.quantum {
+    background-image: linear-gradient(45deg, var(--quantum-pink), #9b00ba);
+}
+
 .btn-text {
     position: relative;
     z-index: 2;
@@ -337,12 +341,16 @@ select:focus, input[type="number"]:focus {
 .btn-glow {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: linear-gradient(45deg, #00f2fe, #4facfe, #ff00ff);
+    background: linear-gradient(45deg, var(--accent-teal), #00a85d, var(--quantum-pink));
     background-size: 200% 200%;
     z-index: 1;
     opacity: 0;
     transition: opacity 0.3s ease;
     animation: gradientShift 3s ease infinite;
+}
+
+.run-btn.quantum .btn-glow {
+    background-image: linear-gradient(45deg, var(--quantum-pink), #9b00ba, var(--accent-teal));
 }
 
 .run-btn:hover .btn-glow {
@@ -370,7 +378,7 @@ select:focus, input[type="number"]:focus {
 .progress-bar {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, var(--accent-teal), var(--quantum-indigo));
+    background: linear-gradient(90deg, var(--accent-teal), var(--quantum-pink));
     box-shadow: 0 0 10px var(--accent-teal);
     transition: width 0.1s linear;
 }
@@ -462,6 +470,6 @@ select:focus, input[type="number"]:focus {
 }
 
 .quantum-text {
-    color: var(--quantum-indigo);
-    text-shadow: 0 0 5px var(--quantum-indigo-dim);
+    color: var(--quantum-pink);
+    text-shadow: 0 0 5px var(--quantum-pink-dim);
 }

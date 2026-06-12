@@ -134,7 +134,7 @@ function App() {
                                 />
                             </div>
                             <button 
-                                className="run-btn" 
+                                className={`run-btn ${mode === 'quantum' ? 'quantum' : ''}`}
                                 onClick={handleRun}
                                 disabled={isRunning}
                                 style={{ opacity: isRunning ? 0.5 : 1 }}
@@ -166,15 +166,15 @@ function App() {
                                 <div 
                                     className="result-card glass-panel highlight"
                                     style={mode === 'quantum' && result.rate > 76 ? {
-                                        borderColor: 'var(--quantum-indigo)',
-                                        boxShadow: '0 0 20px var(--quantum-indigo-dim)'
+                                        borderColor: 'var(--quantum-pink)',
+                                        boxShadow: '0 0 20px var(--quantum-pink-dim)'
                                     } : {}}
                                 >
                                     <span className="label">Success Rate</span>
                                     <span 
                                         className="value"
                                         style={mode === 'quantum' && result.rate > 76 ? {
-                                            background: 'linear-gradient(90deg, var(--quantum-indigo), #ff66ff)',
+                                            background: 'linear-gradient(90deg, var(--quantum-pink), #ff66ff)',
                                             WebkitBackgroundClip: 'text',
                                             WebkitTextFillColor: 'transparent'
                                         } : {}}
