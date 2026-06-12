@@ -4,6 +4,7 @@ import { ClassicalSandbox } from './components/ClassicalSandbox';
 import { QuantumSandbox } from './components/QuantumSandbox';
 import { runSimulation, ClassicalStrategy, QuantumStrategy, SimulationResult } from './engine/Simulation';
 import './App.css';
+import Tutorial from './components/Tutorial';
 
 function App() {
     const [mode, setMode] = useState<'classical' | 'quantum'>('classical');
@@ -13,6 +14,7 @@ function App() {
     const [result, setResult] = useState<SimulationResult | null>(null);
     const [showQuantumPopup, setShowQuantumPopup] = useState(false);
     const [hasSeenQuantumPopup, setHasSeenQuantumPopup] = useState(() => localStorage.getItem('hasSeenQuantumPopup') === 'true');
+    const [hasVisited, setHasVisited] = useState(() => localStorage.getItem('hasVisited') === 'true');
     const [cookieConsent, setCookieConsent] = useState(() => localStorage.getItem('cookieConsent') === 'true');
 
     const [classicalStrategy, setClassicalStrategy] = useState<ClassicalStrategy>({
@@ -54,11 +56,21 @@ function App() {
         }
     };
 
+    const handleTutorialComplete = () => {
+        setHasVisited(true);
+        if (cookieConsent) {
+            localStorage.setItem('hasVisited', 'true');
+        }
+    };
+
     const acceptCookies = () => {
         setCookieConsent(true);
         localStorage.setItem('cookieConsent', 'true');
         if (hasSeenQuantumPopup) {
             localStorage.setItem('hasSeenQuantumPopup', 'true');
+        }
+        if (hasVisited) {
+            localStorage.setItem('hasVisited', 'true');
         }
     };
 
@@ -95,6 +107,7 @@ function App() {
                 </div>
             )}
             
+            <Tutorial showTutorial={!hasVisited} onComplete={handleTutorialComplete} />
             <div className="container">
                 <header>
                     <h1 className="glow-text">CHSH Game Simulation</h1>

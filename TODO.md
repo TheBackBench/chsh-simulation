@@ -1,0 +1,4 @@
+- [x] Add a tutorial
+- [ ] Add a page for more mathematical explanations
+- [ ] Add a nice simulation
+- [ ] Add really complicated strategy planning
