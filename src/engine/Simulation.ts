@@ -1,8 +1,8 @@
 export interface ClassicalStrategy {
-    alice0: boolean;
-    alice1: boolean;
-    bob0: boolean;
-    bob1: boolean;
+    alice0: number;
+    alice1: number;
+    bob0: number;
+    bob1: number;
 }
 
 export interface QuantumStrategy {
@@ -56,8 +56,10 @@ export async function runSimulation(
                 let outA: boolean, outB: boolean;
 
                 if (mode === 'classical') {
-                    outA = x === 0 ? classicalStrategy.alice0 : classicalStrategy.alice1;
-                    outB = y === 0 ? classicalStrategy.bob0 : classicalStrategy.bob1;
+                    const probA = x === 0 ? classicalStrategy.alice0 : classicalStrategy.alice1;
+                    const probB = y === 0 ? classicalStrategy.bob0 : classicalStrategy.bob1;
+                    outA = Math.random() < probA;
+                    outB = Math.random() < probB;
                 } else {
                     const angleA = x === 0 ? qStratRad.a0 : qStratRad.a1;
                     const angleB = y === 0 ? qStratRad.b0 : qStratRad.b1;

@@ -2,17 +2,17 @@
     --bg-color: #0b0f19;
     --text-main: #e2e8f0;
     --text-muted: #94a3b8;
-    
+
     --accent-teal: #00fe8c;
     --accent-teal-dim: rgba(0, 242, 254, 0.2);
     --accent-purple: #894ffe;
-    
+
     --quantum-pink: #d400ff;
     --quantum-pink-dim: rgba(166, 0, 255, 0.2);
-    
+
     --glass-bg: rgba(15, 23, 42, 0.6);
     --glass-border: rgba(255, 255, 255, 0.1);
-    
+
     --win-green: #10b981;
     --loss-red: #ef4444;
 }
@@ -36,18 +36,45 @@ body {
 }
 
 /* Background Stars Animation */
-#stars, #stars2, #stars3 {
+#stars,
+#stars2,
+#stars3 {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     z-index: -1;
 }
-#stars { background: transparent url('https://www.transparenttextures.com/patterns/stardust.png') repeat top center; animation: moveStars 200s linear infinite; opacity: 0.3; }
-#stars2 { background: transparent url('https://www.transparenttextures.com/patterns/stardust.png') repeat top center; animation: moveStars 150s linear infinite; opacity: 0.5; background-size: 200px 200px;}
-#stars3 { background: transparent url('https://www.transparenttextures.com/patterns/stardust.png') repeat top center; animation: moveStars 100s linear infinite; opacity: 0.7; background-size: 300px 300px;}
+
+#stars {
+    background: transparent url('https://www.transparenttextures.com/patterns/stardust.png') repeat top center;
+    animation: moveStars 200s linear infinite;
+    opacity: 0.3;
+}
+
+#stars2 {
+    background: transparent url('https://www.transparenttextures.com/patterns/stardust.png') repeat top center;
+    animation: moveStars 150s linear infinite;
+    opacity: 0.5;
+    background-size: 200px 200px;
+}
+
+#stars3 {
+    background: transparent url('https://www.transparenttextures.com/patterns/stardust.png') repeat top center;
+    animation: moveStars 100s linear infinite;
+    opacity: 0.7;
+    background-size: 300px 300px;
+}
 
 @keyframes moveStars {
-    from { background-position: 0 0; }
-    to { background-position: -10000px 5000px; }
+    from {
+        background-position: 0 0;
+    }
+
+    to {
+        background-position: -10000px 5000px;
+    }
 }
 
 .container {
@@ -106,6 +133,7 @@ header {
     border-color: var(--accent-teal);
     box-shadow: 0 0 15px var(--accent-teal-dim);
 }
+
 #btn-quantum.active {
     background: var(--quantum-pink-dim);
     border-color: var(--quantum-pink);
@@ -123,16 +151,31 @@ header {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .sandbox-header {
     text-align: center;
     margin-bottom: 2rem;
+    padding-left: 220px;
+    padding-right: 220px;
 }
-.sandbox-header h2 { margin-bottom: 0.5rem; }
-.sandbox-header p { color: var(--text-muted); }
+
+.sandbox-header h2 {
+    margin-bottom: 0.5rem;
+}
+
+.sandbox-header p {
+    color: var(--text-muted);
+}
 
 /* Strategy Builder */
 .strategy-builder {
@@ -196,7 +239,8 @@ header {
     margin-bottom: 0.3rem;
 }
 
-select, input[type="number"] {
+select,
+input[type="number"] {
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid var(--glass-border);
     color: white;
@@ -208,11 +252,13 @@ select, input[type="number"] {
     transition: border-color 0.3s ease;
 }
 
-select:focus, input[type="number"]:focus {
+select:focus,
+input[type="number"]:focus {
     border-color: var(--accent-teal);
 }
 
-.quantum select:focus, .quantum input[type="number"]:focus {
+.quantum select:focus,
+.quantum input[type="number"]:focus {
     border-color: var(--quantum-pink);
 }
 
@@ -224,11 +270,13 @@ select:focus, input[type="number"]:focus {
     border-radius: 8px;
     padding-right: 1rem;
 }
+
 .angle-input input {
     border: none;
     background: transparent;
     flex: 1;
 }
+
 .angle-input:focus-within {
     border-color: var(--quantum-pink);
 }
@@ -257,15 +305,24 @@ select:focus, input[type="number"]:focus {
     box-shadow: 0 0 10px var(--quantum-pink);
     animation: pulseLink 2s infinite;
 }
+
 .entanglement-link.glowing span {
     color: var(--quantum-pink);
     text-shadow: 0 0 5px var(--quantum-pink-dim);
 }
 
 @keyframes pulseLink {
-    0% { opacity: 0.5; }
-    50% { opacity: 1; }
-    100% { opacity: 0.5; }
+    0% {
+        opacity: 0.5;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.5;
+    }
 }
 
 .preset-controls {
@@ -282,6 +339,7 @@ select:focus, input[type="number"]:focus {
     cursor: pointer;
     transition: all 0.3s ease;
 }
+
 .secondary-btn:hover {
     background: var(--quantum-pink-dim);
 }
@@ -340,7 +398,10 @@ select:focus, input[type="number"]:focus {
 
 .btn-glow {
     position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     background: linear-gradient(45deg, var(--accent-teal), #00a85d, var(--quantum-pink));
     background-size: 200% 200%;
     z-index: 1;
@@ -358,15 +419,23 @@ select:focus, input[type="number"]:focus {
 }
 
 @keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
 }
 
 .progress-container {
     margin-top: 1.5rem;
     height: 8px;
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 4px;
     overflow: hidden;
 }
@@ -438,6 +507,7 @@ select:focus, input[type="number"]:focus {
     border-color: var(--accent-teal);
     box-shadow: 0 0 20px var(--accent-teal-dim);
 }
+
 .result-card.highlight .value {
     background: linear-gradient(90deg, var(--accent-teal), #4facfe);
     -webkit-background-clip: text;
@@ -456,7 +526,7 @@ select:focus, input[type="number"]:focus {
     justify-content: space-between;
     align-items: center;
     font-size: 1.1rem;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     padding-bottom: 0.5rem;
 }
 

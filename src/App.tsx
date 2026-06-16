@@ -18,7 +18,7 @@ function App() {
     const [cookieConsent, setCookieConsent] = useState(() => localStorage.getItem('cookieConsent') === 'true');
 
     const [classicalStrategy, setClassicalStrategy] = useState<ClassicalStrategy>({
-        alice0: true, alice1: true, bob0: true, bob1: true
+        alice0: 1, alice1: 1, bob0: 1, bob1: 1
     });
     const [quantumStrategy, setQuantumStrategy] = useState<QuantumStrategy>({
         a0: 0, a1: 45, b0: 22.5, b1: -22.5
