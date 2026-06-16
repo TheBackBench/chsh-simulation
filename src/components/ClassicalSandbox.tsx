@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { ClassicalStrategy } from '../engine/Simulation';
+import React from 'react';
+import { ClassicalStrategy, BlockNode } from '../engine/Simulation';
+import { BlockBuilder } from './BlockBuilder';
 
 interface Props {
     strategy: ClassicalStrategy;
@@ -7,124 +8,106 @@ interface Props {
     isActive: boolean;
 }
 
-export const ClassicalSandbox: React.FC<Props> = ({ strategy, setStrategy, isActive }) => {
-    const [isProbabilistic, setIsProbabilistic] = useState({
-        alice: false,
-        bob: false,
-    });
+const DraggableBlock: React.FC<{ type: string, label: string, className: string }> = ({ type, label, className }) => {
+    return (
+        <div
+            className={`block ${className}`}
+            style={{ display: 'inline-block', margin: '4px', cursor: 'grab', fontSize: '0.9rem' }}
+            draggable
+            onDragStart={(e) => {
+                e.dataTransfer.setData('blockType', type);
+            }}
+        >
+            {label}
+        </div>
+    );
+};
 
+export const ClassicalSandbox: React.FC<Props> = ({ strategy, setStrategy, isActive }) => {
     if (!isActive) return null;
 
-    const handleChange = (key: keyof ClassicalStrategy, value: number) => {
-        setStrategy(prev => ({ ...prev, [key]: value }));
+    const handleAliceChange = (node: BlockNode | null) => {
+        setStrategy(prev => ({ ...prev, alice: node }));
     };
 
-    const handlePlayerModeChange = (player: 'alice' | 'bob', prob: boolean) => {
-        setIsProbabilistic(prev => ({ ...prev, [player]: prob }));
-        if (!prob) {
-            handleChange(`${player}0` as keyof ClassicalStrategy, strategy[`${player}0` as keyof ClassicalStrategy] >= 0.5 ? 1 : 0);
-            handleChange(`${player}1` as keyof ClassicalStrategy, strategy[`${player}1` as keyof ClassicalStrategy] >= 0.5 ? 1 : 0);
-        }
-    };
-
-    const renderPlayerHeader = (player: 'alice' | 'bob') => {
-        const isProb = isProbabilistic[player];
-        return (
-            <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem' }}>
-                <h3 style={{ margin: '0 0 0.75rem 0', padding: 0, border: 'none', textAlign: 'center' }}>
-                    {player === 'alice' ? 'Alice' : 'Bob'}
-                </h3>
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
-                    <button
-                        style={{
-                            fontSize: '0.75rem', padding: '4px 12px',
-                            background: !isProb ? 'var(--accent-teal)' : 'transparent',
-                            color: !isProb ? '#000' : 'var(--text-muted)',
-                            border: '1px solid var(--accent-teal)',
-                            borderRadius: '4px', cursor: 'pointer',
-                            transition: 'all 0.2s ease'
-                        }}
-                        onClick={() => handlePlayerModeChange(player, false)}
-                    >
-                        Deterministic
-                    </button>
-                    <button
-                        style={{
-                            fontSize: '0.75rem', padding: '4px 12px',
-                            background: isProb ? 'var(--accent-teal)' : 'transparent',
-                            color: isProb ? '#000' : 'var(--text-muted)',
-                            border: '1px solid var(--accent-teal)',
-                            borderRadius: '4px', cursor: 'pointer',
-                            transition: 'all 0.2s ease'
-                        }}
-                        onClick={() => handlePlayerModeChange(player, true)}
-                    >
-                        Probabilistic
-                    </button>
-                </div>
-            </div>
-        );
-    };
-
-    const renderInputGroup = (player: 'alice' | 'bob', instruction: '0' | '1') => {
-        const key = `${player}${instruction}` as keyof ClassicalStrategy;
-        const isProb = isProbabilistic[player];
-        const value = strategy[key];
-
-        return (
-            <div className="input-group">
-                <label style={{ marginBottom: '0.5rem' }}>If instruction is "{instruction}":</label>
-
-                {!isProb ? (
-                    <select style={{ width: '100%' }} value={value === 1 ? 'true' : 'false'} onChange={(e) => handleChange(key, e.target.value === 'true' ? 1 : 0)}>
-                        <option value="true">Output True</option>
-                        <option value="false">Output False</option>
-                    </select>
-                ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <input
-                            type="number"
-                            min="0" max="100"
-                            value={Math.round(value * 100).toString()}
-                            onChange={(e) => {
-                                let val = parseInt(e.target.value);
-                                if (isNaN(val)) val = 0;
-                                if (val > 100) val = 100;
-                                if (val < 0) val = 0;
-                                handleChange(key, val / 100);
-                            }}
-                            style={{ flex: 1 }}
-                        />
-                        <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', minWidth: '45px' }}>% True</span>
-                    </div>
-                )}
-            </div>
-        );
+    const handleBobChange = (node: BlockNode | null) => {
+        setStrategy(prev => ({ ...prev, bob: node }));
     };
 
     return (
         <section id="classical-sandbox" className="sandbox active">
             <div className="sandbox-header">
                 <h2>Local Hidden-Variable Strategy</h2>
-                <p>Define a deterministic or probabilistic strategy for Alice and Bob.</p>
+                <p>Build a strategy for Alice and Bob using interlocking logic blocks.</p>
             </div>
 
-            <div className="strategy-builder">
+            <div className="palette glass-panel" style={{ padding: '1rem', marginBottom: '2rem', textAlign: 'center' }}>
+                <h3 style={{ margin: '0 0 1rem 0' }}>Block Palette</h3>
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Drag blocks from here into the slots below.</p>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px' }}>
+                    <DraggableBlock type="IF_ELSE" label="If / Else" className="block-if" />
+                    <DraggableBlock type="PROB" label="Return True with Probability of" className="block-prob" />
+                    <DraggableBlock type="RETURN_TRUE" label="Return True" className="block-action" />
+                    <DraggableBlock type="RETURN_FALSE" label="Return False" className="block-action" />
+                    <DraggableBlock type="RECEIVED_1" label="Condition: Received 1" className="block-condition" />
+                    <DraggableBlock type="RECEIVED_0" label="Condition: Received 0" className="block-condition" />
+                    <DraggableBlock type="PROB_COND" label="Condition: Probability %" className="block-condition" />
+                </div>
+            </div>
+
+            <div className="strategy-builder" style={{ alignItems: 'flex-start' }}>
                 <div className="player-card alice">
-                    {renderPlayerHeader('alice')}
-                    {renderInputGroup('alice', '0')}
-                    {renderInputGroup('alice', '1')}
+                    <h3 style={{ margin: '0 0 1.5rem 0', padding: 0, borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem', textAlign: 'center' }}>
+                        Alice
+                    </h3>
+                    <div style={{ minHeight: '200px' }}>
+                        <BlockBuilder node={strategy.alice} onChange={handleAliceChange} />
+                    </div>
+
+                    <div style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                        <h4 style={{ margin: '0 0 0.5rem 0' }}>Default Fallback</h4>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem', lineHeight: '1.4' }}>
+                            Have you covered all options in your blocks? If so, this default will never be invoked!
+                        </p>
+                        <select
+                            style={{ width: '100%', padding: '0.5rem', background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px' }}
+                            value={strategy.aliceDefault ? 'true' : 'false'}
+                            onChange={(e) => setStrategy(prev => ({ ...prev, aliceDefault: e.target.value === 'true' }))}
+                        >
+                            <option value="true">Return True</option>
+                            <option value="false">Return False</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div className="entanglement-link">
+                <div className="entanglement-link" style={{ marginTop: '4rem' }}>
                     <div className="link-line"></div>
                     <span>Local Link</span>
                 </div>
 
                 <div className="player-card bob">
-                    {renderPlayerHeader('bob')}
-                    {renderInputGroup('bob', '0')}
-                    {renderInputGroup('bob', '1')}
+                    <h3 style={{ margin: '0 0 1.5rem 0', padding: 0, borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem', textAlign: 'center' }}>
+                        Bob
+                    </h3>
+                    <div style={{ minHeight: '200px' }}>
+                        <BlockBuilder node={strategy.bob} onChange={handleBobChange} />
+                    </div>
+
+                    <div style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                        <h4 style={{ margin: '0 0 0.5rem 0' }}>Default Fallback</h4>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem', lineHeight: '1.4' }}>
+                            Have you covered all options in your blocks? If so, this default will never be invoked!
+                        </p>
+                        <select
+                            style={{ width: '100%', padding: '0.5rem', background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px' }}
+                            value={strategy.bobDefault ? 'true' : 'false'}
+                            onChange={(e) => setStrategy(prev => ({ ...prev, bobDefault: e.target.value === 'true' }))}
+                        >
+                            <option value="true">Return True</option>
+                            <option value="false">Return False</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </section>

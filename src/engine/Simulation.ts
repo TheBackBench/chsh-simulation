@@ -1,8 +1,20 @@
+export type ConditionNode = 
+    | { type: 'RECEIVED', expected: 0 | 1 }
+    | { type: 'PROB_COND', prob: number };
+
+export type ActionNode = 
+    | { type: 'RETURN', value: boolean }
+    | { type: 'PROB', prob: number }; // prob from 0 to 100
+
+export type BlockNode = 
+    | { type: 'IF_ELSE', condition: ConditionNode | null, trueBranch: BlockNode | null, falseBranch: BlockNode | null }
+    | ActionNode;
+
 export interface ClassicalStrategy {
-    alice0: number;
-    alice1: number;
-    bob0: number;
-    bob1: number;
+    alice: BlockNode | null;
+    bob: BlockNode | null;
+    aliceDefault: boolean;
+    bobDefault: boolean;
 }
 
 export interface QuantumStrategy {
@@ -24,6 +36,37 @@ export function checkWin(x: number, y: number, outA: boolean, outB: boolean): bo
     } else {
         return outA === outB;
     }
+}
+
+function evaluateAST(node: BlockNode | null, instruction: number, defaultVal: boolean): boolean {
+    if (!node) return defaultVal; // Fallback for incomplete trees
+
+    if (node.type === 'RETURN') {
+        return node.value;
+    }
+    
+    if (node.type === 'PROB') {
+        return Math.random() * 100 < node.prob;
+    }
+    
+    if (node.type === 'IF_ELSE') {
+        let conditionMet = false;
+        if (node.condition) {
+            if (node.condition.type === 'RECEIVED') {
+                conditionMet = instruction === node.condition.expected;
+            } else if (node.condition.type === 'PROB_COND') {
+                conditionMet = Math.random() * 100 < node.condition.prob;
+            }
+        }
+        
+        if (conditionMet) {
+            return evaluateAST(node.trueBranch, instruction, defaultVal);
+        } else {
+            return evaluateAST(node.falseBranch, instruction, defaultVal);
+        }
+    }
+    
+    return defaultVal;
 }
 
 export async function runSimulation(
@@ -56,10 +99,8 @@ export async function runSimulation(
                 let outA: boolean, outB: boolean;
 
                 if (mode === 'classical') {
-                    const probA = x === 0 ? classicalStrategy.alice0 : classicalStrategy.alice1;
-                    const probB = y === 0 ? classicalStrategy.bob0 : classicalStrategy.bob1;
-                    outA = Math.random() < probA;
-                    outB = Math.random() < probB;
+                    outA = evaluateAST(classicalStrategy.alice, x, classicalStrategy.aliceDefault);
+                    outB = evaluateAST(classicalStrategy.bob, y, classicalStrategy.bobDefault);
                 } else {
                     const angleA = x === 0 ? qStratRad.a0 : qStratRad.a1;
                     const angleB = y === 0 ? qStratRad.b0 : qStratRad.b1;

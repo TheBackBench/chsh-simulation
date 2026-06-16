@@ -1,0 +1,126 @@
+.block-builder {
+    font-family: 'Inter', sans-serif;
+    user-select: none;
+    font-size: 0.9rem;
+}
+
+.block {
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 4px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    color: #fff;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.block-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.block-slot {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    padding: 6px;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, border-color 0.2s;
+    flex: 1;
+    color: var(--text-muted);
+}
+
+.block-slot.drag-over {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: var(--accent-teal);
+    color: white;
+}
+
+.block-slot-inline {
+    display: inline-flex;
+    min-width: 80px;
+    min-height: 24px;
+    padding: 2px 6px;
+    flex: none;
+}
+
+.block-delete {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: rgba(0, 0, 0, 0.3);
+    border: none;
+    color: #ff6b6b;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.block:hover>.block-delete {
+    opacity: 1;
+}
+
+.block-delete:hover {
+    background: rgba(255, 0, 0, 0.5);
+    color: white;
+}
+
+/* Colors for blocks */
+.block-if {
+    background: linear-gradient(180deg, #f58f00 0%, #975100 100%);
+    border-color: #a05b00;
+}
+
+.block-if-content {
+    margin-left: 12px;
+    padding-left: 8px;
+    border-left: 4px solid rgba(0, 0, 0, 0.2);
+    margin-top: 6px;
+    margin-bottom: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.block-else-label {
+    font-weight: bold;
+    margin: 4px 0;
+}
+
+.block-action,
+.block-prob {
+    background: linear-gradient(180deg, #0bc 0%, #09a 100%);
+    border-color: #078;
+}
+
+.block-condition {
+    background: linear-gradient(180deg, #710ff1 0%, #5200b0 100%);
+    border-color: #6d22e6;
+    border-radius: 12px;
+    padding: 4px 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.block-input {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: white;
+    width: 50px;
+    padding: 2px 4px;
+    font-family: monospace;
+    text-align: center;
+}
