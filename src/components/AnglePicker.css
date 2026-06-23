@@ -1,0 +1,94 @@
+.angle-picker-container {
+    position: relative;
+    display: inline-block;
+    margin: 0 4px;
+}
+
+.angle-display-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--glass-border, rgba(255,255,255,0.2));
+    color: white;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    min-width: 50px;
+    transition: background 0.2s;
+}
+
+.angle-display-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.angle-popover {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 8px;
+    padding: 16px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    min-width: 140px;
+    border-radius: 12px;
+    background: rgba(10, 10, 25, 0.95);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dial-svg {
+    width: 120px;
+    height: 120px;
+    cursor: crosshair;
+    touch-action: none;
+}
+
+.dial-bg {
+    fill: rgba(255, 255, 255, 0.05);
+    stroke: var(--glass-border, rgba(255,255,255,0.2));
+    stroke-width: 2;
+}
+
+.dial-center {
+    fill: var(--quantum-pink, #ff66ff);
+}
+
+.dial-hand {
+    stroke: var(--quantum-pink, #ff66ff);
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
+.angle-input-container {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(0,0,0,0.5);
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--glass-border, rgba(255,255,255,0.2));
+}
+
+.angle-input-box {
+    background: transparent;
+    border: none;
+    color: white;
+    width: 60px;
+    font-size: 1.1rem;
+    text-align: center;
+    outline: none;
+    font-family: monospace;
+}
+
+/* Remove arrows from number input */
+.angle-input-box::-webkit-outer-spin-button,
+.angle-input-box::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.angle-input-box[type=number] {
+  -moz-appearance: textfield;
+}

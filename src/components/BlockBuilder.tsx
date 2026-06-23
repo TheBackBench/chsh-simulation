@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { BlockNode, ConditionNode } from '../engine/Simulation';
+import { AnglePicker } from './AnglePicker';
 import './BlockBuilder.css';
 
 interface Props {
@@ -40,6 +41,9 @@ export const BlockBuilder: React.FC<Props> = ({ node, onChange }) => {
                 break;
             case 'RETURN_FALSE':
                 onChange({ type: 'RETURN', value: false });
+                break;
+            case 'MEASURE_SPIN':
+                onChange({ type: 'MEASURE_SPIN', angle: 0 });
                 break;
         }
     };
@@ -89,6 +93,21 @@ export const BlockBuilder: React.FC<Props> = ({ node, onChange }) => {
                             onChange({ ...node, prob: val });
                         }}
                     /> %
+                </div>
+            </div>
+        );
+    }
+
+    if (node.type === 'MEASURE_SPIN') {
+        return (
+            <div className="block-builder">
+                <div className="block block-action quantum-action">
+                    <button className="block-delete" onClick={() => onChange(null)}>✕</button>
+                    <strong>Measure Spin at Angle</strong>
+                    <AnglePicker
+                        angle={node.angle}
+                        onChange={(val) => onChange({ ...node, angle: val })}
+                    />
                 </div>
             </div>
         );
@@ -152,6 +171,9 @@ const ConditionBuilder: React.FC<{ condition: ConditionNode | null, onChange: (c
             case 'PROB_COND':
                 onChange({ type: 'PROB_COND', prob: 50 });
                 break;
+            case 'MEASURE_SPIN_COND':
+                onChange({ type: 'MEASURE_SPIN_COND', angle: 0, expected: true });
+                break;
         }
     };
 
@@ -186,6 +208,28 @@ const ConditionBuilder: React.FC<{ condition: ConditionNode | null, onChange: (c
                     }}
                 /> %
                 <button style={{ background: 'transparent', border: 'none', color: '#000', cursor: 'pointer', fontWeight: 'bold', marginLeft: '4px' }} onClick={() => onChange(null)}>✕</button>
+            </div>
+        );
+    }
+
+    if (condition.type === 'MEASURE_SPIN_COND') {
+        return (
+            <div className="block-condition quantum-action">
+                <strong>Spin at</strong>
+                <AnglePicker
+                    angle={condition.angle}
+                    onChange={(val) => onChange({ ...condition, angle: val })}
+                />
+                <strong>is</strong>
+                <select
+                    style={{ background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '4px', padding: '2px 4px', cursor: 'pointer' }}
+                    value={condition.expected ? 'up' : 'down'}
+                    onChange={(e) => onChange({ ...condition, expected: e.target.value === 'up' })}
+                >
+                    <option value="up">Up</option>
+                    <option value="down">Down</option>
+                </select>
+                <button style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontWeight: 'bold', marginLeft: '4px' }} onClick={() => onChange(null)}>✕</button>
             </div>
         );
     }

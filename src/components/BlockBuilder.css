@@ -104,6 +104,14 @@
     border-color: #078;
 }
 
+.quantum-action {
+    background: linear-gradient(180deg, var(--quantum-pink, #ff66ff) 0%, #b300b3 100%);
+    border-color: #800080;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .block-condition {
     background: linear-gradient(180deg, #710ff1 0%, #5200b0 100%);
     border-color: #6d22e6;

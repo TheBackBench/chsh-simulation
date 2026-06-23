@@ -1,10 +1,12 @@
 export type ConditionNode = 
     | { type: 'RECEIVED', expected: 0 | 1 }
-    | { type: 'PROB_COND', prob: number };
+    | { type: 'PROB_COND', prob: number }
+    | { type: 'MEASURE_SPIN_COND', angle: number, expected: boolean };
 
 export type ActionNode = 
     | { type: 'RETURN', value: boolean }
-    | { type: 'PROB', prob: number }; // prob from 0 to 100
+    | { type: 'PROB', prob: number } // prob from 0 to 100
+    | { type: 'MEASURE_SPIN', angle: number };
 
 export type BlockNode = 
     | { type: 'IF_ELSE', condition: ConditionNode | null, trueBranch: BlockNode | null, falseBranch: BlockNode | null }
@@ -18,10 +20,10 @@ export interface ClassicalStrategy {
 }
 
 export interface QuantumStrategy {
-    a0: number; // degrees
-    a1: number;
-    b0: number;
-    b1: number;
+    alice: BlockNode | null;
+    bob: BlockNode | null;
+    aliceDefault: boolean;
+    bobDefault: boolean;
 }
 
 export interface SimulationResult {
@@ -38,7 +40,32 @@ export function checkWin(x: number, y: number, outA: boolean, outB: boolean): bo
     }
 }
 
-function evaluateAST(node: BlockNode | null, instruction: number, defaultVal: boolean): boolean {
+export class EntangledPair {
+    firstMeasured: 'alice' | 'bob' | null = null;
+    firstAngle: number = 0;
+    firstResult: boolean = false;
+
+    measure(player: 'alice'|'bob', angleRad: number): boolean {
+        if (!this.firstMeasured) {
+            this.firstMeasured = player;
+            this.firstAngle = angleRad;
+            this.firstResult = Math.random() < 0.5;
+            return this.firstResult;
+        } else {
+            const probSame = Math.pow(Math.cos(this.firstAngle - angleRad), 2);
+            const same = Math.random() < probSame;
+            return same ? this.firstResult : !this.firstResult;
+        }
+    }
+}
+
+function evaluateAST(
+    node: BlockNode | null, 
+    instruction: number, 
+    defaultVal: boolean, 
+    pair: EntangledPair | null = null, 
+    player: 'alice' | 'bob' | null = null
+): boolean {
     if (!node) return defaultVal; // Fallback for incomplete trees
 
     if (node.type === 'RETURN') {
@@ -48,6 +75,13 @@ function evaluateAST(node: BlockNode | null, instruction: number, defaultVal: bo
     if (node.type === 'PROB') {
         return Math.random() * 100 < node.prob;
     }
+
+    if (node.type === 'MEASURE_SPIN') {
+        if (pair && player) {
+            return pair.measure(player, node.angle * (Math.PI / 180));
+        }
+        return Math.random() < 0.5;
+    }
     
     if (node.type === 'IF_ELSE') {
         let conditionMet = false;
@@ -56,13 +90,16 @@ function evaluateAST(node: BlockNode | null, instruction: number, defaultVal: bo
                 conditionMet = instruction === node.condition.expected;
             } else if (node.condition.type === 'PROB_COND') {
                 conditionMet = Math.random() * 100 < node.condition.prob;
+            } else if (node.condition.type === 'MEASURE_SPIN_COND') {
+                const measureResult = pair && player ? pair.measure(player, node.condition.angle * (Math.PI / 180)) : Math.random() < 0.5;
+                conditionMet = measureResult === node.condition.expected;
             }
         }
         
         if (conditionMet) {
-            return evaluateAST(node.trueBranch, instruction, defaultVal);
+            return evaluateAST(node.trueBranch, instruction, defaultVal, pair, player);
         } else {
-            return evaluateAST(node.falseBranch, instruction, defaultVal);
+            return evaluateAST(node.falseBranch, instruction, defaultVal, pair, player);
         }
     }
     
@@ -72,6 +109,7 @@ function evaluateAST(node: BlockNode | null, instruction: number, defaultVal: bo
 export async function runSimulation(
     mode: 'classical' | 'quantum',
     nGames: number,
+    evaluationOrder: 'alice' | 'bob' | 'random',
     classicalStrategy: ClassicalStrategy,
     quantumStrategy: QuantumStrategy,
     onProgress: (percent: number) => void
@@ -81,14 +119,6 @@ export async function runSimulation(
         let wins = 0;
         const chunkSize = Math.max(100, Math.floor(nGames / 100));
         let i = 0;
-        const deg2rad = Math.PI / 180;
-        
-        const qStratRad = {
-            a0: quantumStrategy.a0 * deg2rad,
-            a1: quantumStrategy.a1 * deg2rad,
-            b0: quantumStrategy.b0 * deg2rad,
-            b1: quantumStrategy.b1 * deg2rad,
-        };
 
         function processChunk() {
             const end = Math.min(i + chunkSize, nGames);
@@ -98,20 +128,26 @@ export async function runSimulation(
                 const y = Math.random() < 0.5 ? 0 : 1;
                 let outA: boolean, outB: boolean;
 
+                let isAliceFirst = true;
+                if (evaluationOrder === 'bob') isAliceFirst = false;
+                else if (evaluationOrder === 'random') isAliceFirst = Math.random() < 0.5;
+
                 if (mode === 'classical') {
-                    outA = evaluateAST(classicalStrategy.alice, x, classicalStrategy.aliceDefault);
-                    outB = evaluateAST(classicalStrategy.bob, y, classicalStrategy.bobDefault);
-                } else {
-                    const angleA = x === 0 ? qStratRad.a0 : qStratRad.a1;
-                    const angleB = y === 0 ? qStratRad.b0 : qStratRad.b1;
-                    
-                    const probSame = Math.pow(Math.cos(angleA - angleB), 2);
-                    outA = Math.random() < 0.5;
-                    
-                    if (Math.random() < probSame) {
-                        outB = outA; 
+                    if (isAliceFirst) {
+                        outA = evaluateAST(classicalStrategy.alice, x, classicalStrategy.aliceDefault);
+                        outB = evaluateAST(classicalStrategy.bob, y, classicalStrategy.bobDefault);
                     } else {
-                        outB = !outA;
+                        outB = evaluateAST(classicalStrategy.bob, y, classicalStrategy.bobDefault);
+                        outA = evaluateAST(classicalStrategy.alice, x, classicalStrategy.aliceDefault);
+                    }
+                } else {
+                    const pair = new EntangledPair();
+                    if (isAliceFirst) {
+                        outA = evaluateAST(quantumStrategy.alice, x, quantumStrategy.aliceDefault, pair, 'alice');
+                        outB = evaluateAST(quantumStrategy.bob, y, quantumStrategy.bobDefault, pair, 'bob');
+                    } else {
+                        outB = evaluateAST(quantumStrategy.bob, y, quantumStrategy.bobDefault, pair, 'bob');
+                        outA = evaluateAST(quantumStrategy.alice, x, quantumStrategy.aliceDefault, pair, 'alice');
                     }
                 }
 

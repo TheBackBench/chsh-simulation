@@ -13,7 +13,7 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
-    "module": "node20",
+    "module": "nodenext",
     "moduleResolution": "nodenext",
     "resolveJsonModule": true,
     "isolatedModules": true,

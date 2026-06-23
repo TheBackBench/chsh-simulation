@@ -2,3 +2,4 @@
 - [ ] Add a page for more mathematical explanations
 - [ ] Add a nice simulation
 - [ ] Add really complicated strategy planning
+- [ ] Change the shapes of the logic blocks

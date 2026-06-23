@@ -9,6 +9,7 @@ import Tutorial from './components/Tutorial';
 function App() {
     const [mode, setMode] = useState<'classical' | 'quantum'>('classical');
     const [nGames, setNGames] = useState(10_000);
+    const [evaluationOrder, setEvaluationOrder] = useState<'alice' | 'bob' | 'random'>('random');
     const [isRunning, setIsRunning] = useState(false);
     const [progress, setProgress] = useState(0);
     const [result, setResult] = useState<SimulationResult | null>(null);
@@ -18,28 +19,32 @@ function App() {
     const [cookieConsent, setCookieConsent] = useState(() => localStorage.getItem('cookieConsent') === 'true');
 
     const [classicalStrategy, setClassicalStrategy] = useState<ClassicalStrategy>({
-        alice: { type: 'RETURN', value: true },
-        bob: { type: 'RETURN', value: true },
+        alice: null,
+        bob: null,
         aliceDefault: false,
         bobDefault: false
     });
     const [quantumStrategy, setQuantumStrategy] = useState<QuantumStrategy>({
-        a0: 0, a1: 45, b0: 22.5, b1: -22.5
+        alice: null,
+        bob: null,
+        aliceDefault: false,
+        bobDefault: false
     });
 
     const handleRun = async () => {
         setIsRunning(true);
         setResult(null);
         setProgress(0);
-        
+
         const res = await runSimulation(
-            mode, 
-            nGames, 
-            classicalStrategy, 
-            quantumStrategy, 
+            mode,
+            nGames,
+            evaluationOrder,
+            classicalStrategy,
+            quantumStrategy,
             (p) => setProgress(p)
         );
-        
+
         setResult(res);
         setIsRunning(false);
     };
@@ -48,11 +53,11 @@ function App() {
         setMode(newMode);
         setResult(null);
         setProgress(0);
-        
+
         if (newMode === 'quantum' && !hasSeenQuantumPopup) {
             setShowQuantumPopup(true);
             setHasSeenQuantumPopup(true);
-            
+
             if (cookieConsent) {
                 localStorage.setItem('hasSeenQuantumPopup', 'true');
             }
@@ -82,7 +87,7 @@ function App() {
             <div id="stars"></div>
             <div id="stars2"></div>
             <div id="stars3"></div>
-            
+
             {showQuantumPopup && (
                 <div className="popup-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
                     <div className="popup-content glass-panel" style={{ padding: '2rem', maxWidth: '600px', textAlign: 'center' }}>
@@ -97,7 +102,7 @@ function App() {
                     </div>
                 </div>
             )}
-            
+
             {!cookieConsent && (
                 <div className="cookie-banner glass-panel" style={{ position: 'fixed', bottom: '20px', left: '20px', right: '20px', maxWidth: '800px', margin: '0 auto', zIndex: 1000, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', padding: '1rem 2rem' }}>
                     <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.4' }}>
@@ -109,7 +114,7 @@ function App() {
                     </button>
                 </div>
             )}
-            
+
             <Tutorial showTutorial={!hasVisited} onComplete={handleTutorialComplete} />
             <div className="container">
                 <header>
@@ -118,13 +123,13 @@ function App() {
                 </header>
 
                 <div className="mode-selector">
-                    <button 
+                    <button
                         className={`mode-btn ${mode === 'classical' ? 'active' : ''}`}
                         onClick={() => handleModeChange('classical')}
                     >
                         Classical Mode
                     </button>
-                    <button 
+                    <button
                         id="btn-quantum"
                         className={`mode-btn ${mode === 'quantum' ? 'active' : ''}`}
                         onClick={() => handleModeChange('quantum')}
@@ -141,15 +146,28 @@ function App() {
                         <div className="run-panel glass-panel">
                             <div className="input-group inline">
                                 <label htmlFor="num-games">Number of Games (N):</label>
-                                <input 
-                                    type="number" 
-                                    id="num-games" 
-                                    value={nGames} 
+                                <input
+                                    type="number"
+                                    id="num-games"
+                                    value={nGames}
                                     onChange={(e) => setNGames(parseInt(e.target.value) || 100)}
-                                    min="100" max="1000000" step="100" 
+                                    min="100" max="1000000" step="100"
                                 />
                             </div>
-                            <button 
+                            <div className="input-group inline">
+                                <label htmlFor="eval-order">Play Order:</label>
+                                <select 
+                                    id="eval-order" 
+                                    value={evaluationOrder} 
+                                    onChange={(e) => setEvaluationOrder(e.target.value as 'alice' | 'bob' | 'random')}
+                                    style={{ background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid var(--glass-border)', padding: '4px 8px', borderRadius: '4px' }}
+                                >
+                                    <option value="alice">Alice First</option>
+                                    <option value="bob">Bob First</option>
+                                    <option value="random">Random (Per Game)</option>
+                                </select>
+                            </div>
+                            <button
                                 className={`run-btn ${mode === 'quantum' ? 'quantum' : ''}`}
                                 onClick={handleRun}
                                 disabled={isRunning}
@@ -159,7 +177,7 @@ function App() {
                                 <div className="btn-glow"></div>
                             </button>
                         </div>
-                        
+
                         {(isRunning || result) && (
                             <div className={`progress-container ${!isRunning && !result ? 'hidden' : ''}`}>
                                 <div className="progress-bar" style={{ width: `${progress}%` }}></div>
@@ -179,7 +197,7 @@ function App() {
                                     <span className="label">Total Games</span>
                                     <span className="value">{result.total.toLocaleString()}</span>
                                 </div>
-                                <div 
+                                <div
                                     className="result-card glass-panel highlight"
                                     style={mode === 'quantum' && result.rate > 76 ? {
                                         borderColor: 'var(--quantum-pink)',
@@ -187,7 +205,7 @@ function App() {
                                     } : {}}
                                 >
                                     <span className="label">Success Rate</span>
-                                    <span 
+                                    <span
                                         className="value"
                                         style={mode === 'quantum' && result.rate > 76 ? {
                                             background: 'linear-gradient(90deg, var(--quantum-pink), #ff66ff)',
