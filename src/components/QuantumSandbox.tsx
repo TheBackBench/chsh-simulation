@@ -65,7 +65,7 @@ export const QuantumSandbox: React.FC<Props> = ({ strategy, setStrategy, isActiv
                 },
                 falseBranch: {
                     type: 'IF_ELSE',
-                    condition: { type: 'MEASURE_SPIN_COND', angle: -22.5, expected: true },
+                    condition: { type: 'MEASURE_SPIN_COND', angle: 337.5, expected: true },
                     trueBranch: { type: 'RETURN', value: true },
                     falseBranch: { type: 'RETURN', value: false }
                 }
@@ -163,7 +163,7 @@ export const QuantumSandbox: React.FC<Props> = ({ strategy, setStrategy, isActiv
             </div>
 
             <div className="preset-controls">
-                <button className="secondary-btn" onClick={loadOptimal}>Load Optimal Angles</button>
+                <button className="secondary-btn" onClick={loadOptimal}>Reveal Optimal Strategy</button>
             </div>
         </section>
     );

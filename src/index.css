@@ -17,6 +17,41 @@
     --loss-red: #ef4444;
 }
 
+body.theme-how-to {
+    --bg-color: #0b0f19;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --accent-teal: #38bdf8;
+    --accent-teal-dim: rgba(56, 189, 248, 0.2);
+    --accent-purple: #818cf8;
+    --glass-bg: rgba(30, 41, 59, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+body.theme-classical {
+    --bg-color: #0b0f19;
+    --text-main: #e2e8f0;
+    --text-muted: #94a3b8;
+    --accent-teal: #00fe8c;
+    --accent-teal-dim: rgba(0, 242, 254, 0.2);
+    --accent-purple: #894ffe;
+    --glass-bg: rgba(15, 23, 42, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+body.theme-quantum {
+    --bg-color: #0b0f19;
+    --text-main: #fdf4ff;
+    --text-muted: #d8b4e2;
+    --accent-teal: #d400ff;
+    --accent-teal-dim: rgba(166, 0, 255, 0.2);
+    --accent-purple: #ff00d4;
+    --glass-bg: rgba(46, 16, 101, 0.4);
+    --glass-border: rgba(212, 0, 255, 0.2);
+    --quantum-pink: #ff00ff;
+    --quantum-pink-dim: rgba(255, 0, 255, 0.3);
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
