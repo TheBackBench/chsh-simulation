@@ -106,6 +106,54 @@ function evaluateAST(
     return defaultVal;
 }
 
+export interface RoundResult {
+    x: number;
+    y: number;
+    outA: boolean;
+    outB: boolean;
+    win: boolean;
+    quantumMeasured: boolean;
+}
+
+export function playSingleRound(
+    mode: 'classical' | 'quantum',
+    evaluationOrder: 'alice' | 'bob' | 'random',
+    classicalStrategy: ClassicalStrategy,
+    quantumStrategy: QuantumStrategy
+): RoundResult {
+    const x = Math.random() < 0.5 ? 0 : 1;
+    const y = Math.random() < 0.5 ? 0 : 1;
+    let outA: boolean, outB: boolean;
+    let quantumMeasured = false;
+
+    let isAliceFirst = true;
+    if (evaluationOrder === 'bob') isAliceFirst = false;
+    else if (evaluationOrder === 'random') isAliceFirst = Math.random() < 0.5;
+
+    if (mode === 'classical') {
+        if (isAliceFirst) {
+            outA = evaluateAST(classicalStrategy.alice, x, classicalStrategy.aliceDefault);
+            outB = evaluateAST(classicalStrategy.bob, y, classicalStrategy.bobDefault);
+        } else {
+            outB = evaluateAST(classicalStrategy.bob, y, classicalStrategy.bobDefault);
+            outA = evaluateAST(classicalStrategy.alice, x, classicalStrategy.aliceDefault);
+        }
+    } else {
+        const pair = new EntangledPair();
+        if (isAliceFirst) {
+            outA = evaluateAST(quantumStrategy.alice, x, quantumStrategy.aliceDefault, pair, 'alice');
+            outB = evaluateAST(quantumStrategy.bob, y, quantumStrategy.bobDefault, pair, 'bob');
+        } else {
+            outB = evaluateAST(quantumStrategy.bob, y, quantumStrategy.bobDefault, pair, 'bob');
+            outA = evaluateAST(quantumStrategy.alice, x, quantumStrategy.aliceDefault, pair, 'alice');
+        }
+        quantumMeasured = pair.firstMeasured !== null;
+    }
+
+    const win = checkWin(x, y, outA, outB);
+    return { x, y, outA, outB, win, quantumMeasured };
+}
+
 export async function runSimulation(
     mode: 'classical' | 'quantum',
     nGames: number,
@@ -124,34 +172,8 @@ export async function runSimulation(
             const end = Math.min(i + chunkSize, nGames);
             
             for (; i < end; i++) {
-                const x = Math.random() < 0.5 ? 0 : 1;
-                const y = Math.random() < 0.5 ? 0 : 1;
-                let outA: boolean, outB: boolean;
-
-                let isAliceFirst = true;
-                if (evaluationOrder === 'bob') isAliceFirst = false;
-                else if (evaluationOrder === 'random') isAliceFirst = Math.random() < 0.5;
-
-                if (mode === 'classical') {
-                    if (isAliceFirst) {
-                        outA = evaluateAST(classicalStrategy.alice, x, classicalStrategy.aliceDefault);
-                        outB = evaluateAST(classicalStrategy.bob, y, classicalStrategy.bobDefault);
-                    } else {
-                        outB = evaluateAST(classicalStrategy.bob, y, classicalStrategy.bobDefault);
-                        outA = evaluateAST(classicalStrategy.alice, x, classicalStrategy.aliceDefault);
-                    }
-                } else {
-                    const pair = new EntangledPair();
-                    if (isAliceFirst) {
-                        outA = evaluateAST(quantumStrategy.alice, x, quantumStrategy.aliceDefault, pair, 'alice');
-                        outB = evaluateAST(quantumStrategy.bob, y, quantumStrategy.bobDefault, pair, 'bob');
-                    } else {
-                        outB = evaluateAST(quantumStrategy.bob, y, quantumStrategy.bobDefault, pair, 'bob');
-                        outA = evaluateAST(quantumStrategy.alice, x, quantumStrategy.aliceDefault, pair, 'alice');
-                    }
-                }
-
-                if (checkWin(x, y, outA, outB)) {
+                const result = playSingleRound(mode, evaluationOrder, classicalStrategy, quantumStrategy);
+                if (result.win) {
                     wins++;
                 }
             }

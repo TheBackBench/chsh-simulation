@@ -4,7 +4,8 @@ import { ClassicalSandbox } from './components/ClassicalSandbox';
 import { QuantumSandbox } from './components/QuantumSandbox';
 import { HowToPlay } from './components/HowToPlay';
 import { RulesSidebar } from './components/RulesSidebar';
-import { runSimulation, ClassicalStrategy, QuantumStrategy, SimulationResult } from './engine/Simulation';
+import { SimulationDashboard } from './components/SimulationDashboard';
+import { ClassicalStrategy, QuantumStrategy } from './engine/Simulation';
 import './App.css';
 import Tutorial from './components/Tutorial';
 
@@ -12,9 +13,7 @@ function App() {
     const [mode, setMode] = useState<'how-to' | 'classical' | 'quantum'>('how-to');
     const [nGames, setNGames] = useState(10_000);
     const [evaluationOrder, setEvaluationOrder] = useState<'alice' | 'bob' | 'random'>('random');
-    const [isRunning, setIsRunning] = useState(false);
-    const [progress, setProgress] = useState(0);
-    const [result, setResult] = useState<SimulationResult | null>(null);
+    const [isAnimating, setIsAnimating] = useState(false);
     const [showQuantumPopup, setShowQuantumPopup] = useState(false);
     const [hasSeenQuantumPopup, setHasSeenQuantumPopup] = useState(() => localStorage.getItem('hasSeenQuantumPopup') === 'true');
     const [hasVisited, setHasVisited] = useState(() => localStorage.getItem('hasVisited') === 'true');
@@ -37,29 +36,13 @@ function App() {
         document.body.className = `theme-${mode}`;
     }, [mode]);
 
-    const handleRun = async () => {
+    const handleRun = () => {
         if (mode === 'how-to') return;
-        setIsRunning(true);
-        setResult(null);
-        setProgress(0);
-
-        const res = await runSimulation(
-            mode,
-            nGames,
-            evaluationOrder,
-            classicalStrategy,
-            quantumStrategy,
-            (p) => setProgress(p)
-        );
-
-        setResult(res);
-        setIsRunning(false);
+        setIsAnimating(true);
     };
 
     const handleModeChange = (newMode: 'how-to' | 'classical' | 'quantum') => {
         setMode(newMode);
-        setResult(null);
-        setProgress(0);
 
         if (newMode === 'quantum' && !hasSeenQuantumPopup) {
             setShowQuantumPopup(true);
@@ -130,10 +113,21 @@ function App() {
                 </header>
 
                 <div className="main-layout" style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
-                    <RulesSidebar />
+                    {!isAnimating && <RulesSidebar />}
 
                     <div className="content-area" style={{ flex: 1, minWidth: 0 }}>
-                        <div className="mode-selector">
+                        {isAnimating ? (
+                            <SimulationDashboard
+                                mode={mode as 'classical' | 'quantum'}
+                                nGames={nGames}
+                                evaluationOrder={evaluationOrder}
+                                classicalStrategy={classicalStrategy}
+                                quantumStrategy={quantumStrategy}
+                                onClose={() => setIsAnimating(false)}
+                            />
+                        ) : (
+                            <>
+                                <div className="mode-selector">
                             <button
                                 className={`mode-btn ${mode === 'how-to' ? 'active' : ''}`}
                                 onClick={() => handleModeChange('how-to')}
@@ -194,57 +188,16 @@ function App() {
                             <button
                                 className={`run-btn ${mode === 'quantum' ? 'quantum' : ''}`}
                                 onClick={handleRun}
-                                disabled={isRunning}
-                                style={{ opacity: isRunning ? 0.5 : 1 }}
                             >
-                                <span className="btn-text">{isRunning ? 'Running...' : 'Run Simulation'}</span>
+                                <span className="btn-text">Run Simulation</span>
                                 <div className="btn-glow"></div>
                             </button>
-                        </div>
-
-                        {(isRunning || result) && (
-                            <div className={`progress-container ${!isRunning && !result ? 'hidden' : ''}`}>
-                                <div className="progress-bar" style={{ width: `${progress}%` }}></div>
-                            </div>
-                        )}
-                    </section>
-                    )}
-
-                    {mode !== 'how-to' && result && (
-                        <section className="results-dashboard">
-                            <h2>Simulation Results</h2>
-                            <div className="results-grid">
-                                <div className="result-card glass-panel">
-                                    <span className="label">Games Won</span>
-                                    <span className="value">{result.wins.toLocaleString()}</span>
-                                </div>
-                                <div className="result-card glass-panel">
-                                    <span className="label">Total Games</span>
-                                    <span className="value">{result.total.toLocaleString()}</span>
-                                </div>
-                                <div
-                                    className="result-card glass-panel highlight"
-                                    style={mode === 'quantum' && result.rate > 76 ? {
-                                        borderColor: 'var(--quantum-pink)',
-                                        boxShadow: '0 0 20px var(--quantum-pink-dim)'
-                                    } : {}}
-                                >
-                                    <span className="label">Success Rate</span>
-                                    <span
-                                        className="value"
-                                        style={mode === 'quantum' && result.rate > 76 ? {
-                                            background: 'linear-gradient(90deg, var(--quantum-pink), #ff66ff)',
-                                            WebkitBackgroundClip: 'text',
-                                            WebkitTextFillColor: 'transparent'
-                                        } : {}}
-                                    >
-                                        {result.rate.toFixed(2)}%
-                                    </span>
-                                </div>
                             </div>
                         </section>
                     )}
                 </main>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
