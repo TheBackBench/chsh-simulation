@@ -20,11 +20,11 @@ export const SimulationDashboard: React.FC<Props> = ({
     const [round, setRound] = useState(0);
     const [playState, setPlayState] = useState<PlayState>('playing');
     const [speed, setSpeed] = useState<1 | 3 | 10>(1);
-    
+
     // Stats
     const [wins, setWins] = useState(0);
     const [historyRates, setHistoryRates] = useState<number[]>([]);
-    
+
     // Animation state
     const [currentStage, setCurrentStage] = useState<RoundStage>('ready');
     const [roundData, setRoundData] = useState<RoundResult | null>(null);
@@ -36,13 +36,13 @@ export const SimulationDashboard: React.FC<Props> = ({
         setPlayState('finished');
         let currentWins = wins;
         const newRates = [...historyRates];
-        
+
         for (let i = round + 1; i <= nGames; i++) {
             const result = playSingleRound(mode, evaluationOrder, classicalStrategy, quantumStrategy);
             if (result.win) currentWins++;
             newRates.push((currentWins / i) * 100);
         }
-        
+
         setWins(currentWins);
         setHistoryRates(newRates);
         setRound(nGames);
@@ -61,11 +61,11 @@ export const SimulationDashboard: React.FC<Props> = ({
 
         const runLoop = async () => {
             const baseDelay = speed === 1 ? 800 : speed === 3 ? 300 : 50;
-            
+
             // Generate Data
             const data = playSingleRound(mode, evaluationOrder, classicalStrategy, quantumStrategy);
             setRoundData(data);
-            
+
             // Sending Stage
             setCurrentStage('sending');
             await new Promise(r => setTimeout(r, baseDelay));
@@ -82,7 +82,7 @@ export const SimulationDashboard: React.FC<Props> = ({
             setWins(newWins);
             setRound(r => r + 1);
             setHistoryRates(prev => [...prev, (newWins / (round + 1)) * 100]);
-            
+
             await new Promise(r => setTimeout(r, baseDelay / 2));
             if (isCancelled || playStateRef.current !== 'playing') return;
 
@@ -94,7 +94,7 @@ export const SimulationDashboard: React.FC<Props> = ({
         return () => {
             isCancelled = true;
         };
-    }, [round, playState, speed, wins]);
+    }, [round, playState, speed, wins, mode, nGames, evaluationOrder, classicalStrategy, quantumStrategy]);
 
     const successRate = round > 0 ? (wins / round * 100).toFixed(2) : '0.00';
 
@@ -105,9 +105,8 @@ export const SimulationDashboard: React.FC<Props> = ({
         const margin = 20;
         const graphW = width - margin * 2;
         const graphH = height - margin * 2;
-        
-        const maxN = Math.max(nGames, 10);
-        
+
+
         let path = '';
         if (historyRates.length > 0) {
             const points = historyRates.map((rate, idx) => {
@@ -124,19 +123,19 @@ export const SimulationDashboard: React.FC<Props> = ({
             <svg viewBox={`0 0 ${width} ${height}`} className="live-graph">
                 <line x1={margin} y1={margin} x2={margin} y2={height - margin} stroke="#666" />
                 <line x1={margin} y1={height - margin} x2={width - margin} y2={height - margin} stroke="#666" />
-                
+
                 {/* 75% Limit Line */}
                 <line x1={margin} y1={limitY} x2={width - margin} y2={limitY} stroke="#ff4444" strokeDasharray="4" />
                 <text x={width - margin - 30} y={limitY - 5} fill="#ff4444" fontSize="10">75%</text>
 
                 {path && <path d={path} fill="none" stroke="var(--accent-teal)" strokeWidth="2" />}
-                
+
                 {historyRates.length > 0 && (
-                    <circle 
-                        cx={margin + (round / nGames) * graphW} 
-                        cy={margin + graphH - (historyRates[historyRates.length - 1] / 100) * graphH} 
-                        r="3" 
-                        fill="var(--accent-teal)" 
+                    <circle
+                        cx={margin + (round / nGames) * graphW}
+                        cy={margin + graphH - (historyRates[historyRates.length - 1] / 100) * graphH}
+                        r="3"
+                        fill="var(--accent-teal)"
                     />
                 )}
             </svg>
@@ -149,16 +148,16 @@ export const SimulationDashboard: React.FC<Props> = ({
                 <h2>Simulation in Progress</h2>
                 <button className="close-btn" onClick={onClose}>✕</button>
             </div>
-            
+
             <div className="dashboard-content">
                 <div className="pane left-pane glass-panel">
                     <div className="turn-counter">Turn {round} / {nGames}</div>
-                    
+
                     <div className="animation-area">
                         <div className={`computer-node ${currentStage !== 'ready' ? 'active' : ''}`}>
                             💻 Computer
                         </div>
-                        
+
                         <div className="players">
                             <div className="player-node alice">
                                 👩 Alice
@@ -169,7 +168,7 @@ export const SimulationDashboard: React.FC<Props> = ({
                                     <div className="bit returning-from-alice">{roundData.outA ? 1 : 0}</div>
                                 )}
                             </div>
-                            
+
                             {mode === 'quantum' && (
                                 <div className={`quantum-link ${(currentStage === 'sending' || currentStage === 'returning') && roundData?.quantumMeasured ? 'measured' : ''}`}>
                                     〰〰 Entanglement 〰〰
@@ -186,14 +185,14 @@ export const SimulationDashboard: React.FC<Props> = ({
                                 )}
                             </div>
                         </div>
-                        
+
                         {currentStage === 'result' && roundData && (
                             <div className={`round-result-label ${roundData.win ? 'win' : 'loss'}`}>
                                 {roundData.win ? 'SUCCESS!' : 'FAILURE'}
                             </div>
                         )}
                     </div>
-                    
+
                     <div className="controls">
                         {playState !== 'finished' && (
                             <>
@@ -211,7 +210,7 @@ export const SimulationDashboard: React.FC<Props> = ({
                         )}
                     </div>
                 </div>
-                
+
                 <div className="right-panes">
                     <div className="pane glass-panel rules-pane">
                         <h3>Score Rules</h3>
@@ -219,7 +218,7 @@ export const SimulationDashboard: React.FC<Props> = ({
                         <p>If x=1, y=1: Responses must be DIFFERENT.</p>
                         <p>Otherwise: Responses must be the SAME.</p>
                     </div>
-                    
+
                     <div className="pane glass-panel stats-pane">
                         <div className="stat-box">
                             <span className="stat-label">Success Rate</span>
@@ -230,7 +229,7 @@ export const SimulationDashboard: React.FC<Props> = ({
                             <span className="stat-value">{wins}</span>
                         </div>
                     </div>
-                    
+
                     <div className="pane glass-panel graph-pane">
                         <h3>Live Success Rate</h3>
                         {renderGraph()}
