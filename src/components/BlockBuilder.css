@@ -132,3 +132,11 @@
     font-family: monospace;
     text-align: center;
 }
+
+.condition-drop-wrapper {
+    transition: all 0.2s ease;
+}
+
+.condition-drop-wrapper.drag-over {
+    box-shadow: 0 0 0 2px var(--accent-teal);
+}

@@ -11,7 +11,7 @@ import Tutorial from './components/Tutorial';
 
 function App() {
     const [mode, setMode] = useState<'how-to' | 'classical' | 'quantum'>('how-to');
-    const [nGames, setNGames] = useState(10_000);
+    const [nGames, setNGames] = useState(1000);
     const [evaluationOrder, setEvaluationOrder] = useState<'alice' | 'bob' | 'random'>('random');
     const [isAnimating, setIsAnimating] = useState(false);
     const [showQuantumPopup, setShowQuantumPopup] = useState(false);

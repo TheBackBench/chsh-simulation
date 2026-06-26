@@ -17,6 +17,12 @@
     --loss-red: #ef4444;
 }
 
+#root {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
 body.theme-how-to {
     --bg-color: #0b0f19;
     --text-main: #f8fafc;

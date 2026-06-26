@@ -45,6 +45,10 @@ export class EntangledPair {
     firstAngle: number = 0;
     firstResult: boolean = false;
 
+    secondMeasured: 'alice' | 'bob' | null = null;
+    secondAngle: number = 0;
+    secondResult: boolean = false;
+
     measure(player: 'alice'|'bob', angleRad: number): boolean {
         if (!this.firstMeasured) {
             this.firstMeasured = player;
@@ -52,9 +56,12 @@ export class EntangledPair {
             this.firstResult = Math.random() < 0.5;
             return this.firstResult;
         } else {
+            this.secondMeasured = player;
+            this.secondAngle = angleRad;
             const probSame = Math.pow(Math.cos(this.firstAngle - angleRad), 2);
             const same = Math.random() < probSame;
-            return same ? this.firstResult : !this.firstResult;
+            this.secondResult = same ? this.firstResult : !this.firstResult;
+            return this.secondResult;
         }
     }
 }
@@ -113,6 +120,14 @@ export interface RoundResult {
     outB: boolean;
     win: boolean;
     quantumMeasured: boolean;
+    quantumDetails?: {
+        firstMeasured: 'alice' | 'bob' | null;
+        firstAngle: number;
+        firstResult: boolean;
+        secondMeasured: 'alice' | 'bob' | null;
+        secondAngle: number;
+        secondResult: boolean;
+    };
 }
 
 export function playSingleRound(
@@ -125,6 +140,7 @@ export function playSingleRound(
     const y = Math.random() < 0.5 ? 0 : 1;
     let outA: boolean, outB: boolean;
     let quantumMeasured = false;
+    let pair: EntangledPair | null = null;
 
     let isAliceFirst = true;
     if (evaluationOrder === 'bob') isAliceFirst = false;
@@ -139,7 +155,7 @@ export function playSingleRound(
             outA = evaluateAST(classicalStrategy.alice, x, classicalStrategy.aliceDefault);
         }
     } else {
-        const pair = new EntangledPair();
+        pair = new EntangledPair();
         if (isAliceFirst) {
             outA = evaluateAST(quantumStrategy.alice, x, quantumStrategy.aliceDefault, pair, 'alice');
             outB = evaluateAST(quantumStrategy.bob, y, quantumStrategy.bobDefault, pair, 'bob');
@@ -151,7 +167,18 @@ export function playSingleRound(
     }
 
     const win = checkWin(x, y, outA, outB);
-    return { x, y, outA, outB, win, quantumMeasured };
+    const result: RoundResult = { x, y, outA, outB, win, quantumMeasured };
+    if (mode === 'quantum' && pair) {
+        result.quantumDetails = {
+            firstMeasured: pair.firstMeasured,
+            firstAngle: pair.firstMeasured ? pair.firstAngle * (180 / Math.PI) : 0,
+            firstResult: pair.firstResult,
+            secondMeasured: pair.secondMeasured,
+            secondAngle: pair.secondMeasured ? pair.secondAngle * (180 / Math.PI) : 0,
+            secondResult: pair.secondResult
+        };
+    }
+    return result;
 }
 
 export async function runSimulation(

@@ -45,6 +45,38 @@ export const BlockBuilder: React.FC<Props> = ({ node, onChange }) => {
             case 'MEASURE_SPIN':
                 onChange({ type: 'MEASURE_SPIN', angle: 0 });
                 break;
+            case 'RECEIVED_1':
+                onChange({
+                    type: 'IF_ELSE',
+                    condition: { type: 'RECEIVED', expected: 1 },
+                    trueBranch: null,
+                    falseBranch: null
+                });
+                break;
+            case 'RECEIVED_0':
+                onChange({
+                    type: 'IF_ELSE',
+                    condition: { type: 'RECEIVED', expected: 0 },
+                    trueBranch: null,
+                    falseBranch: null
+                });
+                break;
+            case 'PROB_COND':
+                onChange({
+                    type: 'IF_ELSE',
+                    condition: { type: 'PROB_COND', prob: 50 },
+                    trueBranch: null,
+                    falseBranch: null
+                });
+                break;
+            case 'MEASURE_SPIN_COND':
+                onChange({
+                    type: 'IF_ELSE',
+                    condition: { type: 'MEASURE_SPIN_COND', angle: 0, expected: true },
+                    trueBranch: null,
+                    falseBranch: null
+                });
+                break;
         }
     };
 
@@ -177,6 +209,61 @@ const ConditionBuilder: React.FC<{ condition: ConditionNode | null, onChange: (c
         }
     };
 
+    const renderConditionContent = () => {
+        if (!condition) return null;
+
+        if (condition.type === 'PROB_COND') {
+            return (
+                <div className="block-condition">
+                    <strong>Probability</strong>
+                    <input
+                        type="number"
+                        className="block-input"
+                        min="0" max="100"
+                        value={condition.prob}
+                        onChange={(e) => {
+                            let val = parseInt(e.target.value);
+                            if (isNaN(val)) val = 0;
+                            if (val > 100) val = 100;
+                            if (val < 0) val = 0;
+                            onChange({ ...condition, prob: val });
+                        }}
+                    /> %
+                    <button style={{ background: 'transparent', border: 'none', color: '#000', cursor: 'pointer', fontWeight: 'bold', marginLeft: '4px' }} onClick={() => onChange(null)}>✕</button>
+                </div>
+            );
+        }
+
+        if (condition.type === 'MEASURE_SPIN_COND') {
+            return (
+                <div className="block-condition quantum-action">
+                    <strong>Spin at</strong>
+                    <AnglePicker
+                        angle={condition.angle}
+                        onChange={(val) => onChange({ ...condition, angle: val })}
+                    />
+                    <strong>is</strong>
+                    <select
+                        style={{ background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '4px', padding: '2px 4px', cursor: 'pointer' }}
+                        value={condition.expected ? 'up' : 'down'}
+                        onChange={(e) => onChange({ ...condition, expected: e.target.value === 'up' })}
+                    >
+                        <option value="up">Up</option>
+                        <option value="down">Down</option>
+                    </select>
+                    <button style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontWeight: 'bold', marginLeft: '4px' }} onClick={() => onChange(null)}>✕</button>
+                </div>
+            );
+        }
+
+        return (
+            <div className="block-condition">
+                <strong>Received {condition.expected}</strong>
+                <button style={{ background: 'transparent', border: 'none', color: '#000', cursor: 'pointer', fontWeight: 'bold', marginLeft: '4px' }} onClick={() => onChange(null)}>✕</button>
+            </div>
+        );
+    };
+
     if (!condition) {
         return (
             <div
@@ -190,54 +277,15 @@ const ConditionBuilder: React.FC<{ condition: ConditionNode | null, onChange: (c
         );
     }
 
-    if (condition.type === 'PROB_COND') {
-        return (
-            <div className="block-condition">
-                <strong>Probability</strong>
-                <input
-                    type="number"
-                    className="block-input"
-                    min="0" max="100"
-                    value={condition.prob}
-                    onChange={(e) => {
-                        let val = parseInt(e.target.value);
-                        if (isNaN(val)) val = 0;
-                        if (val > 100) val = 100;
-                        if (val < 0) val = 0;
-                        onChange({ ...condition, prob: val });
-                    }}
-                /> %
-                <button style={{ background: 'transparent', border: 'none', color: '#000', cursor: 'pointer', fontWeight: 'bold', marginLeft: '4px' }} onClick={() => onChange(null)}>✕</button>
-            </div>
-        );
-    }
-
-    if (condition.type === 'MEASURE_SPIN_COND') {
-        return (
-            <div className="block-condition quantum-action">
-                <strong>Spin at</strong>
-                <AnglePicker
-                    angle={condition.angle}
-                    onChange={(val) => onChange({ ...condition, angle: val })}
-                />
-                <strong>is</strong>
-                <select
-                    style={{ background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '4px', padding: '2px 4px', cursor: 'pointer' }}
-                    value={condition.expected ? 'up' : 'down'}
-                    onChange={(e) => onChange({ ...condition, expected: e.target.value === 'up' })}
-                >
-                    <option value="up">Up</option>
-                    <option value="down">Down</option>
-                </select>
-                <button style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontWeight: 'bold', marginLeft: '4px' }} onClick={() => onChange(null)}>✕</button>
-            </div>
-        );
-    }
-
     return (
-        <div className="block-condition">
-            <strong>Received {condition.expected}</strong>
-            <button style={{ background: 'transparent', border: 'none', color: '#000', cursor: 'pointer', fontWeight: 'bold', marginLeft: '4px' }} onClick={() => onChange(null)}>✕</button>
+        <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`condition-drop-wrapper ${isDragOver ? 'drag-over' : ''}`}
+            style={{ display: 'inline-block', borderRadius: '12px' }}
+        >
+            {renderConditionContent()}
         </div>
     );
 };
