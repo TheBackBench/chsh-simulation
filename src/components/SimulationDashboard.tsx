@@ -174,6 +174,7 @@ export const SimulationDashboard: React.FC<Props> = ({
         return () => {
             isCancelled = true;
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [round, playState, speed, wins, mode, nGames, evaluationOrder, classicalStrategy, quantumStrategy]);
 
     const successRate = round > 0 ? (wins / round * 100).toFixed(2) : '0.00';
