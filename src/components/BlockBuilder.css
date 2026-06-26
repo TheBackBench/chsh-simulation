@@ -199,10 +199,17 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 4px;
     color: white;
-    width: 50px;
-    padding: 2px 4px;
+    width: 54px;
+    padding: 2px 2px;
     font-family: monospace;
     text-align: center;
+    -moz-appearance: textfield;
+}
+
+.block-input::-webkit-outer-spin-button,
+.block-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 .condition-drop-wrapper {

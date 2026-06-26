@@ -1,7 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BlockNode, ConditionNode } from '../engine/Simulation';
 import { AnglePicker } from './AnglePicker';
 import './BlockBuilder.css';
+
+interface ProbInputProps {
+    value: number;
+    onChange: (val: number) => void;
+}
+
+const ProbInput: React.FC<ProbInputProps> = ({ value, onChange }) => {
+    const [localValue, setLocalValue] = useState<string>(value.toString());
+
+    useEffect(() => {
+        if (localValue !== "" && parseInt(localValue) === value) return;
+        if (localValue === "" && value === 0) return;
+        setLocalValue(value.toString());
+    }, [value, localValue]);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const raw = e.target.value;
+        setLocalValue(raw);
+        
+        let parsed = parseInt(raw);
+        if (isNaN(parsed)) {
+            onChange(0);
+        } else {
+            if (parsed > 100) parsed = 100;
+            if (parsed < 0) parsed = 0;
+            onChange(parsed);
+        }
+    };
+
+    return (
+        <input
+            type="number"
+            className="block-input"
+            min="0"
+            max="100"
+            value={localValue}
+            onChange={handleInputChange}
+        />
+    );
+};
 
 interface Props {
     node: BlockNode | null;
@@ -112,18 +152,9 @@ export const BlockBuilder: React.FC<Props> = ({ node, onChange }) => {
                 <div className="block block-prob">
                     <button className="block-delete" onClick={() => onChange(null)}>✕</button>
                     <strong>Return True with Probability of </strong>
-                    <input
-                        type="number"
-                        className="block-input"
-                        min="0" max="100"
+                    <ProbInput
                         value={node.prob}
-                        onChange={(e) => {
-                            let val = parseInt(e.target.value);
-                            if (isNaN(val)) val = 0;
-                            if (val > 100) val = 100;
-                            if (val < 0) val = 0;
-                            onChange({ ...node, prob: val });
-                        }}
+                        onChange={(val) => onChange({ ...node, prob: val })}
                     /> %
                 </div>
             </div>
@@ -216,18 +247,9 @@ const ConditionBuilder: React.FC<{ condition: ConditionNode | null, onChange: (c
             return (
                 <div className="block-condition">
                     <strong>Probability</strong>
-                    <input
-                        type="number"
-                        className="block-input"
-                        min="0" max="100"
+                    <ProbInput
                         value={condition.prob}
-                        onChange={(e) => {
-                            let val = parseInt(e.target.value);
-                            if (isNaN(val)) val = 0;
-                            if (val > 100) val = 100;
-                            if (val < 0) val = 0;
-                            onChange({ ...condition, prob: val });
-                        }}
+                        onChange={(val) => onChange({ ...condition, prob: val })}
                     /> %
                     <button style={{ background: 'transparent', border: 'none', color: '#000', cursor: 'pointer', fontWeight: 'bold', marginLeft: '4px' }} onClick={() => onChange(null)}>✕</button>
                 </div>

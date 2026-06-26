@@ -564,9 +564,6 @@ export const SimulationDashboard: React.FC<Props> = ({
                     <div className="right-panes">
                         <div className="pane glass-panel rules-pane">
                             <h3>Score Rules</h3>
-                            <p style={{ fontSize: '0.8rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>
-                                Win if: <strong>(Alice's Input AND Bob's Input) == (Alice's Response XOR Bob's Response)</strong>
-                            </p>
                             <table className="rules-table">
                                 <thead>
                                     <tr>
