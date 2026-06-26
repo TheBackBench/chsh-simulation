@@ -41,18 +41,30 @@ export const ClassicalSandbox: React.FC<Props> = ({ strategy, setStrategy, isAct
                 <p>Build a strategy for Alice and Bob using interlocking logic blocks.</p>
             </div>
 
-            <div className="palette glass-panel" style={{ padding: '1rem', marginBottom: '2rem', textAlign: 'center' }}>
-                <h3 style={{ margin: '0 0 1rem 0' }}>Block Palette</h3>
-                <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Drag blocks from here into the slots below.</p>
+            <div className="palette glass-panel" style={{ padding: '1.25rem', marginBottom: '2rem' }}>
+                <h3 style={{ margin: '0 0 0.5rem 0', textAlign: 'center' }}>Block Palette</h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem', textAlign: 'center' }}>Drag blocks from here into the slots below.</p>
 
-                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px' }}>
-                    <DraggableBlock type="IF_ELSE" label="If / Else" className="block-if" />
-                    <DraggableBlock type="PROB" label="Return True with Probability of" className="block-prob" />
-                    <DraggableBlock type="RETURN_TRUE" label="Return True" className="block-action" />
-                    <DraggableBlock type="RETURN_FALSE" label="Return False" className="block-action" />
-                    <DraggableBlock type="RECEIVED_1" label="Condition: Received 1" className="block-condition" />
-                    <DraggableBlock type="RECEIVED_0" label="Condition: Received 0" className="block-condition" />
-                    <DraggableBlock type="PROB_COND" label="Condition: Probability %" className="block-condition" />
+                <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', alignItems: 'stretch', flexWrap: 'wrap' }}>
+                    <div className="palette-sub-area" style={{ flex: 1, minWidth: '240px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '8px', padding: '1rem' }}>
+                        <h4 style={{ margin: '0 0 0.75rem 0', color: 'var(--accent-teal)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem', textAlign: 'center' }}>Base Blocks</h4>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+                            <DraggableBlock type="IF_ELSE" label="If / Else" className="block-if" />
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                                <DraggableBlock type="RETURN_TRUE" label="Return True" className="block-action" />
+                                <DraggableBlock type="RETURN_FALSE" label="Return False" className="block-action" />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="palette-sub-area" style={{ flex: 1, minWidth: '240px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '8px', padding: '1rem' }}>
+                        <h4 style={{ margin: '0 0 0.75rem 0', color: 'var(--accent-teal)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem', textAlign: 'center' }}>Condition Blocks</h4>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
+                            <DraggableBlock type="RECEIVED_1" label="Received 1" className="block-condition" />
+                            <DraggableBlock type="RECEIVED_0" label="Received 0" className="block-condition" />
+                            <DraggableBlock type="PROB_COND" label="Probability %" className="block-condition" />
+                        </div>
+                    </div>
                 </div>
             </div>
 
