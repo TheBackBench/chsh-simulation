@@ -6,7 +6,7 @@
 
 .block {
     border-radius: 8px;
-    padding: 8px 12px;
+    padding: 8px 32px 8px 12px;
     margin-bottom: 4px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     color: #fff;
@@ -100,6 +100,7 @@
     font-size: 14px;
     opacity: 0;
     transition: opacity 0.2s;
+    z-index: 10;
 }
 
 .block:hover>.block-delete {
