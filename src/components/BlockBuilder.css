@@ -113,8 +113,8 @@
 
 /* Colors for blocks */
 .block-if {
-    background: linear-gradient(180deg, #f58f00 0%, #975100 100%);
-    border-color: #a05b00;
+    background: linear-gradient(180deg, #00f59f 0%, #009760 100%);
+    border-color: #00a053;
 }
 
 .block-if-content {
@@ -135,8 +135,8 @@
 
 .block-action,
 .block-prob {
-    background: linear-gradient(180deg, #0bc 0%, #09a 100%);
-    border-color: #078;
+    background: linear-gradient(180deg, rgb(0, 95, 204) 0%, rgb(0, 62, 170) 100%);
+    border-color: rgb(0, 70, 136);
 }
 
 .quantum-action {
@@ -172,7 +172,7 @@
     right: 0;
     bottom: 0;
     z-index: -2;
-    background: linear-gradient(180deg, #6d22e6 0%, #47009e 100%);
+    background: linear-gradient(180deg, #e62284 0%, #9e0074 100%);
     clip-path: polygon(24px 0, calc(100% - 24px) 0, 100% 50%, calc(100% - 24px) 100%, 24px 100%, 0 50%);
 }
 
@@ -184,7 +184,7 @@
     right: 1px;
     bottom: 1px;
     z-index: -1;
-    background: linear-gradient(180deg, #710ff1 0%, #5200b0 100%);
+    background: linear-gradient(180deg, #e62284 0%, #9e0074 100%);
     clip-path: polygon(23.5px 0, calc(100% - 23.5px) 0, 100% 50%, calc(100% - 23.5px) 100%, 23.5px 100%, 0 50%);
 }
 
