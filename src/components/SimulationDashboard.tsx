@@ -12,14 +12,14 @@ interface Props {
 }
 
 type PlayState = 'playing' | 'paused' | 'finished';
-type RoundStage = 
-    | 'ready' 
-    | 'sending' 
-    | 'q-measure-1-pending' 
-    | 'q-measure-1-result' 
-    | 'q-measure-2-pending' 
-    | 'q-measure-2-result' 
-    | 'returning' 
+type RoundStage =
+    | 'ready'
+    | 'sending'
+    | 'q-measure-1-pending'
+    | 'q-measure-1-result'
+    | 'q-measure-2-pending'
+    | 'q-measure-2-result'
+    | 'returning'
     | 'result';
 
 
@@ -39,23 +39,36 @@ export const SimulationDashboard: React.FC<Props> = ({
     const [currentStage, setCurrentStage] = useState<RoundStage>('ready');
     const [roundData, setRoundData] = useState<RoundResult | null>(null);
 
+    // New State for No Entanglement parallel run
+    const [noEntWins, setNoEntWins] = useState(0);
+    const [noEntHistoryRates, setNoEntHistoryRates] = useState<number[]>([]);
+    const [noEntRoundData, setNoEntRoundData] = useState<RoundResult | null>(null);
+
     const playStateRef = useRef(playState);
     playStateRef.current = playState;
 
     const baseDelay = 1600 / speed;
 
     const [showTheoreticalOptimum, setShowTheoreticalOptimum] = useState(false);
+    const [showNoEntTheoreticalOptimum, setShowNoEntTheoreticalOptimum] = useState(false);
     const theoreticalOptimum = mode === 'classical' ? 75 : 85.355;
+    const noEntTheoreticalOptimum = 75;
 
     const skipToEnd = () => {
         setPlayState('finished');
         let currentWins = wins;
         const newRates = [...historyRates];
+        let currentNoEntWins = noEntWins;
+        const newNoEntRates = [...noEntHistoryRates];
 
         let startFrom = round;
         if (roundData) {
             if (roundData.win) currentWins++;
             newRates.push((currentWins / (round + 1)) * 100);
+            if (mode === 'quantum' && noEntRoundData) {
+                if (noEntRoundData.win) currentNoEntWins++;
+                newNoEntRates.push((currentNoEntWins / (round + 1)) * 100);
+            }
             startFrom = round + 1;
         }
 
@@ -63,12 +76,22 @@ export const SimulationDashboard: React.FC<Props> = ({
             const result = playSingleRound(mode, evaluationOrder, classicalStrategy, quantumStrategy);
             if (result.win) currentWins++;
             newRates.push((currentWins / i) * 100);
+            if (mode === 'quantum') {
+                const noEntResult = playSingleRound(mode, evaluationOrder, classicalStrategy, quantumStrategy, true);
+                if (noEntResult.win) currentNoEntWins++;
+                newNoEntRates.push((currentNoEntWins / i) * 100);
+            }
         }
 
         setWins(currentWins);
         setHistoryRates(newRates);
+        if (mode === 'quantum') {
+            setNoEntWins(currentNoEntWins);
+            setNoEntHistoryRates(newNoEntRates);
+        }
         setRound(nGames);
         setRoundData(null);
+        setNoEntRoundData(null);
         setCurrentStage('result');
     };
 
@@ -85,9 +108,14 @@ export const SimulationDashboard: React.FC<Props> = ({
         const runLoop = async () => {
             // Retrieve or generate data for this round
             let data = roundData;
+            let noEntData = noEntRoundData;
             if (!data) {
                 data = playSingleRound(mode, evaluationOrder, classicalStrategy, quantumStrategy);
                 setRoundData(data);
+                if (mode === 'quantum') {
+                    noEntData = playSingleRound(mode, evaluationOrder, classicalStrategy, quantumStrategy, true);
+                    setNoEntRoundData(noEntData);
+                }
             }
 
             const details = data.quantumDetails;
@@ -150,6 +178,14 @@ export const SimulationDashboard: React.FC<Props> = ({
                 setWins(newWins);
                 setHistoryRates(prev => [...prev, (newWins / (round + 1)) * 100]);
                 setRoundData(null);
+
+                if (mode === 'quantum' && noEntData) {
+                    const newNoEntWins = noEntWins + (noEntData.win ? 1 : 0);
+                    setNoEntWins(newNoEntWins);
+                    setNoEntHistoryRates(prev => [...prev, (newNoEntWins / (round + 1)) * 100]);
+                    setNoEntRoundData(null);
+                }
+
                 setCurrentStage('ready');
                 setRound(r => r + 1);
             }
@@ -161,24 +197,24 @@ export const SimulationDashboard: React.FC<Props> = ({
             isCancelled = true;
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [round, playState, speed, wins, mode, nGames, evaluationOrder, classicalStrategy, quantumStrategy]);
+    }, [round, playState, speed, wins, mode, nGames, evaluationOrder, classicalStrategy, quantumStrategy, noEntWins]);
 
     const successRate = round > 0 ? (wins / round * 100).toFixed(2) : '0.00';
 
-    // SVG Graph rendering
-    const renderGraph = (isFinished: boolean = false) => {
+    const renderGraph = (isFinished: boolean = false, rates: number[] = historyRates, maxVal: number = theoreticalOptimum, showMax: boolean = showTheoreticalOptimum, isEntangled: boolean = true) => {
         const width = isFinished ? 500 : 300;
         const height = isFinished ? 200 : 150;
         const leftMargin = isFinished ? 35 : 30;
-        const rightMargin = 20;
-        const topMargin = 15;
+        const rightMargin = isFinished ? 35 : 10;
         const bottomMargin = isFinished ? 25 : 20;
+        const topMargin = 20;
+        const graphColor = isEntangled ? '#d400ff' : '#aaaaaa';
         const fontSize = isFinished ? 9 : 7.5;
 
         const graphW = width - leftMargin - rightMargin;
         const graphH = height - topMargin - bottomMargin;
 
-        const currentTotal = historyRates.length;
+        const currentTotal = rates.length;
 
         // Y coordinate mapping
         const yCoord = (rate: number) => topMargin + graphH - (rate / 100) * graphH;
@@ -197,13 +233,13 @@ export const SimulationDashboard: React.FC<Props> = ({
 
         let path = '';
         if (currentTotal > 0) {
-            const points = historyRates.map((rate, idx) => {
+            const points = rates.map((rate, idx) => {
                 return `${xCoord(idx)},${yCoord(rate)}`;
             });
             path = `M ${points.join(' L ')}`;
         }
 
-        const limitY = yCoord(theoreticalOptimum);
+        const limitY = yCoord(maxVal);
 
         // Generate Y-axis grid lines and labels
         const yTicks = [0, 25, 50, 75, 100];
@@ -288,25 +324,25 @@ export const SimulationDashboard: React.FC<Props> = ({
                 <line x1={leftMargin} y1={height - bottomMargin} x2={width - rightMargin} y2={height - bottomMargin} stroke="#666" />
 
                 {/* Theoretical Limit Line */}
-                {showTheoreticalOptimum && (
+                {showMax && (
                     <>
                         <line x1={leftMargin} y1={limitY} x2={width - rightMargin} y2={limitY} stroke="#ff4444" strokeDasharray="4" />
                         <text x={width - rightMargin - 100} y={limitY - 5} fill="#ff4444" fontSize={fontSize - 0.5} fontWeight="bold">
-                            Theoretical Max: {theoreticalOptimum.toFixed(1)}%
+                            Theoretical Max: {maxVal.toFixed(1)}%
                         </text>
                     </>
                 )}
 
                 {/* Success Rate Path */}
-                {path && <path d={path} fill="none" stroke="var(--accent-teal)" strokeWidth="2" />}
+                {path && <path d={path} fill="none" stroke={graphColor} strokeWidth="2" />}
 
                 {/* End Point Marker */}
-                {historyRates.length > 0 && (
+                {rates.length > 0 && (
                     <circle
-                        cx={xCoord(historyRates.length - 1)}
-                        cy={yCoord(historyRates[historyRates.length - 1])}
+                        cx={xCoord(rates.length - 1)}
+                        cy={yCoord(rates[rates.length - 1])}
                         r="3"
-                        fill="var(--accent-teal)"
+                        fill={graphColor}
                     />
                 )}
             </svg>
@@ -348,7 +384,7 @@ export const SimulationDashboard: React.FC<Props> = ({
                 <line x1="-28" y1="0" x2="28" y2="0" className="axis-faint" />
                 <line x1="0" y1="-28" x2="0" y2="28" className="axis-faint" />
                 <text x={labelX} y={labelY} className="compass-label" textAnchor="middle" dominantBaseline="middle">Up</text>
-                
+
                 {collapsedState && (
                     <g transform={`rotate(${-collapsedState.angle})`}>
                         <line x1="-24" y1="0" x2="24" y2="0" className="first-axis-faint" />
@@ -375,15 +411,15 @@ export const SimulationDashboard: React.FC<Props> = ({
         );
     };
 
-    const renderQuantumOverlay = (player: 'alice' | 'bob') => {
-        if (mode !== 'quantum' || !roundData || !roundData.quantumDetails) return null;
-        const details = roundData.quantumDetails;
-        
+    const renderQuantumOverlay = (player: 'alice' | 'bob', data: RoundResult | null, isEntangled: boolean = true) => {
+        if (mode !== 'quantum' || !data || !data.quantumDetails) return null;
+        const details = data.quantumDetails;
+
         // Check if this player measures first
         if (details.firstMeasured === player) {
             if (currentStage === 'q-measure-1-pending') {
                 return (
-                    <div className="quantum-overlay pending">
+                    <div className={`quantum-overlay pending ${!isEntangled ? 'no-ent-overlay' : ''}`}>
                         {renderUnitCircle(details.firstAngle, true, false, false)}
                         <div className="quantum-prob">50% ↑ / 50% ↓</div>
                         <div className="quantum-status-text">Measuring spin ({details.firstAngle.toFixed(0)}°)...</div>
@@ -399,7 +435,7 @@ export const SimulationDashboard: React.FC<Props> = ({
             ].includes(currentStage);
             if (showResult) {
                 return (
-                    <div className="quantum-overlay measured">
+                    <div className={`quantum-overlay measured ${!isEntangled ? 'no-ent-overlay' : ''}`}>
                         {renderUnitCircle(details.firstAngle, false, true, details.firstResult)}
                         <div className="quantum-spin-result">{details.firstResult ? '↑ (Up)' : '↓ (Down)'}</div>
                         <div className="quantum-status-text">Spin measured at {details.firstAngle.toFixed(0)}°</div>
@@ -411,12 +447,12 @@ export const SimulationDashboard: React.FC<Props> = ({
         // Check if this player measures second
         if (details.secondMeasured === player) {
             const firstResultMeasured = ['q-measure-2-pending', 'q-measure-2-result', 'returning', 'result'].includes(currentStage);
-            const collapsedState = firstResultMeasured ? { angle: details.firstAngle, resultUp: details.firstResult } : undefined;
+            const collapsedState = (isEntangled && firstResultMeasured) ? { angle: details.firstAngle, resultUp: details.firstResult } : undefined;
 
             if (currentStage === 'q-measure-2-pending') {
-                const { pctUp, pctDown } = getSecondMeasurementProbs(details);
+                const { pctUp, pctDown } = isEntangled ? getSecondMeasurementProbs(details) : { pctUp: 50, pctDown: 50 };
                 return (
-                    <div className="quantum-overlay pending">
+                    <div className={`quantum-overlay pending ${!isEntangled ? 'no-ent-overlay' : ''}`}>
                         {renderUnitCircle(details.secondAngle, true, false, false, collapsedState)}
                         <div className="quantum-prob">{pctUp}% ↑ / {pctDown}% ↓</div>
                         <div className="quantum-status-text">Measuring spin ({details.secondAngle.toFixed(0)}°)...</div>
@@ -430,7 +466,7 @@ export const SimulationDashboard: React.FC<Props> = ({
             ].includes(currentStage);
             if (showResult) {
                 return (
-                    <div className="quantum-overlay measured">
+                    <div className={`quantum-overlay measured ${!isEntangled ? 'no-ent-overlay' : ''}`}>
                         {renderUnitCircle(details.secondAngle, false, true, details.secondResult, collapsedState)}
                         <div className="quantum-spin-result">{details.secondResult ? '↑ (Up)' : '↓ (Down)'}</div>
                         <div className="quantum-status-text">Spin measured at {details.secondAngle.toFixed(0)}°</div>
@@ -442,6 +478,62 @@ export const SimulationDashboard: React.FC<Props> = ({
         return null;
     };
 
+    const renderAnimationArea = (data: RoundResult | null, isEntangled: boolean) => (
+        <div className="animation-area">
+            <div className={`computer-node ${currentStage !== 'ready' ? 'active' : ''}`}>
+                💻 Computer
+                {data && currentStage === 'result' && (
+                    <>
+                        <div className="bit static-on-computer-top">{data.outA ? 1 : 0}</div>
+                        <div className="bit static-on-computer-bottom">{data.outB ? 1 : 0}</div>
+                    </>
+                )}
+            </div>
+
+            <div className="players">
+                <div className="player-node alice">
+                    👩 Alice
+                    {data && currentStage === 'sending' && (
+                        <div className="bit flying-to-alice">{data.x}</div>
+                    )}
+                    {data && currentStage !== 'sending' && currentStage !== 'ready' && (
+                        <div className="bit static-on-alice">{data.x}</div>
+                    )}
+                    {data && currentStage === 'returning' && (
+                        <div className="bit returning-from-alice">{data.outA ? 1 : 0}</div>
+                    )}
+                    {renderQuantumOverlay('alice', data, isEntangled)}
+                </div>
+
+                {mode === 'quantum' && (
+                    <div className={`quantum-link ${!isEntangled ? 'no-ent' : ''} ${data?.quantumMeasured && currentStage !== 'ready' && currentStage !== 'result' ? 'measured' : ''}`}>
+                        {isEntangled ? '〰〰 Entanglement 〰〰' : '〰〰 No Entanglement 〰〰'}
+                    </div>
+                )}
+
+                <div className="player-node bob">
+                    👨 Bob
+                    {data && currentStage === 'sending' && (
+                        <div className="bit flying-to-bob">{data.y}</div>
+                    )}
+                    {data && currentStage !== 'sending' && currentStage !== 'ready' && (
+                        <div className="bit static-on-bob">{data.y}</div>
+                    )}
+                    {data && currentStage === 'returning' && (
+                        <div className="bit returning-from-bob">{data.outB ? 1 : 0}</div>
+                    )}
+                    {renderQuantumOverlay('bob', data, isEntangled)}
+                </div>
+            </div>
+
+            {currentStage === 'result' && data && (
+                <div className={`round-result-label ${data.win ? 'win' : 'loss'}`}>
+                    {data.win ? 'SUCCESS!' : 'FAILURE'}
+                </div>
+            )}
+        </div>
+    );
+
     return (
         <div className={`simulation-dashboard ${playState === 'paused' ? 'paused' : ''}`} style={{ '--animation-duration': `${baseDelay}ms` } as React.CSSProperties}>
             <div className="dashboard-header">
@@ -450,111 +542,115 @@ export const SimulationDashboard: React.FC<Props> = ({
             </div>
 
             {playState === 'finished' ? (
-                <div className="dashboard-content finished-layout">
-                    <div className="pane glass-panel stats-pane finished-stats">
-                        <div className="finished-stat-grid">
-                            <div className="stat-box">
-                                <span className="stat-label">Success Rate</span>
-                                <span className="stat-value highlight-success-rate">{successRate}%</span>
+                <div className="dashboard-content finished-layout" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                    <div style={{ display: 'flex', gap: '2rem', width: '100%' }}>
+                        <div className="pane glass-panel stats-pane finished-stats" style={{ flex: 1 }}>
+                            <h3 style={{ textAlign: 'center', marginBottom: '1rem', color: 'var(--accent-teal)' }}>{mode === 'quantum' ? 'True Quantum (Entangled)' : 'Simulation Stats'}</h3>
+                            <div className="finished-stat-grid">
+                                <div className="stat-box">
+                                    <span className="stat-label">Success Rate</span>
+                                    <span className="stat-value highlight-success-rate">{successRate}%</span>
+                                </div>
+                                <div className="stat-box">
+                                    <span className="stat-label">Total Rounds</span>
+                                    <span className="stat-value">{nGames}</span>
+                                </div>
+                                <div className="stat-box">
+                                    <span className="stat-label">Wins</span>
+                                    <span className="stat-value">{wins}</span>
+                                </div>
                             </div>
-                            <div className="stat-box">
-                                <span className="stat-label">Total Rounds</span>
-                                <span className="stat-value">{round} / {nGames}</span>
-                            </div>
-                            <div className="stat-box">
-                                <span className="stat-label">Wins</span>
-                                <span className="stat-value">{wins}</span>
-                            </div>
+                        </div>
 
+                        <div className="pane glass-panel graph-pane finished-graph" style={{ flex: 2 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                <h3 style={{ margin: 0 }}>Average Success Rate</h3>
+                                <button
+                                    className="secondary-btn"
+                                    style={{ fontSize: '0.8rem', padding: '0.25rem 0.75rem' }}
+                                    onClick={() => setShowTheoreticalOptimum(prev => !prev)}
+                                >
+                                    {showTheoreticalOptimum ? 'Hide Theoretical Max' : 'Show Theoretical Max'}
+                                </button>
+                            </div>
+                            {renderGraph(true, historyRates, theoreticalOptimum, showTheoreticalOptimum, true)}
                         </div>
                     </div>
 
-                    <div className="pane glass-panel graph-pane finished-graph">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                            <h3 style={{ margin: 0 }}>Average Success Rate</h3>
-                            <button 
-                                className="secondary-btn" 
-                                style={{ fontSize: '0.8rem', padding: '0.25rem 0.75rem' }}
-                                onClick={() => setShowTheoreticalOptimum(prev => !prev)}
-                            >
-                                {showTheoreticalOptimum ? 'Hide Theoretical Max' : 'Show Theoretical Max'}
-                            </button>
+                    {mode === 'quantum' && (
+                        <div style={{ display: 'flex', gap: '2rem', width: '100%' }}>
+                            <div className="pane glass-panel stats-pane finished-stats" style={{ flex: 1 }}>
+                                <h3 style={{ textAlign: 'center', marginBottom: '1rem', color: 'var(--text-muted)' }}>No Entanglement</h3>
+                                <div className="finished-stat-grid">
+                                    <div className="stat-box">
+                                        <span className="stat-label">Success Rate</span>
+                                        <span className="stat-value" style={{ color: 'var(--text-muted)' }}>{round > 0 ? (noEntWins / round * 100).toFixed(2) : '0.00'}%</span>
+                                    </div>
+                                    <div className="stat-box">
+                                        <span className="stat-label">Total Rounds</span>
+                                        <span className="stat-value" style={{ color: 'var(--text-muted)' }}>{nGames}</span>
+                                    </div>
+                                    <div className="stat-box">
+                                        <span className="stat-label">Wins</span>
+                                        <span className="stat-value" style={{ color: 'var(--text-muted)' }}>{noEntWins}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="pane glass-panel graph-pane finished-graph" style={{ flex: 2 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                    <h3 style={{ margin: 0 }}>Average Success Rate</h3>
+                                    <button
+                                        className="secondary-btn no-ent-btn"
+                                        style={{ fontSize: '0.8rem', padding: '0.25rem 0.75rem' }}
+                                        onClick={() => setShowNoEntTheoreticalOptimum(prev => !prev)}
+                                    >
+                                        {showNoEntTheoreticalOptimum ? 'Hide Theoretical Max' : 'Show Theoretical Max'}
+                                    </button>
+                                </div>
+                                {renderGraph(true, noEntHistoryRates, noEntTheoreticalOptimum, showNoEntTheoreticalOptimum, false)}
+                            </div>
                         </div>
-                        {renderGraph(true)}
-                    </div>
+                    )}
 
-                    <div className="finished-controls">
+                    <div className="finished-controls" style={{ marginTop: '1rem' }}>
                         <button className="finish-btn" onClick={onClose}>Finish & Return</button>
                     </div>
                 </div>
             ) : (
                 <div className="dashboard-content">
-                    <div className="pane left-pane glass-panel">
-                        <div className="turn-counter">Turn {round} / {nGames}</div>
+                    <div className="left-column" style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
-                        <div className="animation-area">
-                            <div className={`computer-node ${currentStage !== 'ready' ? 'active' : ''}`}>
-                                💻 Computer
-                                {roundData && currentStage === 'result' && (
-                                    <>
-                                        <div className="bit static-on-computer-top">{roundData.outA ? 1 : 0}</div>
-                                        <div className="bit static-on-computer-bottom">{roundData.outB ? 1 : 0}</div>
-                                    </>
-                                )}
+                        <div className="pane glass-panel controls-window" style={{ padding: '1rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div className="turn-counter" style={{ position: 'static' }}>Turn {round} / {nGames}</div>
+                            <div className="controls" style={{ margin: 0 }}>
+                                <button onClick={() => setPlayState(p => p === 'playing' ? 'paused' : 'playing')}>
+                                    {playState === 'playing' ? '⏸ Pause' : '▶ Play'}
+                                </button>
+                                <button onClick={() => setSpeed(s => s === 1 ? 3 : s === 3 ? 10 : s === 10 ? 20 : s === 20 ? 50 : s === 50 ? 100 : 1)}>
+                                    Speed: {speed}x
+                                </button>
+                                <button onClick={skipToEnd}>⏭ Skip to End</button>
                             </div>
+                        </div>
 
-                            <div className="players">
-                                <div className="player-node alice">
-                                    👩 Alice
-                                    {roundData && currentStage === 'sending' && (
-                                        <div className="bit flying-to-alice">{roundData.x}</div>
-                                    )}
-                                    {roundData && currentStage !== 'sending' && currentStage !== 'ready' && (
-                                        <div className="bit static-on-alice">{roundData.x}</div>
-                                    )}
-                                    {roundData && currentStage === 'returning' && (
-                                        <div className="bit returning-from-alice">{roundData.outA ? 1 : 0}</div>
-                                    )}
-                                    {renderQuantumOverlay('alice')}
-                                </div>
+                        <div className="pane glass-panel" style={{ position: 'relative', display: 'flex', flexDirection: 'column', padding: '1.5rem', flex: 1 }}>
+                            {mode === 'quantum' && <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--quantum-pink)' }}>True Quantum (Entangled)</h3>}
 
-                                {mode === 'quantum' && (
-                                    <div className={`quantum-link ${roundData?.quantumMeasured && currentStage !== 'ready' && currentStage !== 'result' ? 'measured' : ''}`}>
-                                        〰〰 Entanglement 〰〰
+                            {renderAnimationArea(roundData, true)}
+                        </div>
+
+                        {mode === 'quantum' && (
+                            <div className="pane glass-panel no-ent-live-window" style={{ position: 'relative', display: 'flex', flexDirection: 'column', padding: '1.5rem', flex: 1 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                    <h4 style={{ margin: 0, color: 'var(--text-muted)' }}>No Entanglement</h4>
+                                    <div style={{ fontSize: '0.9rem' }}>
+                                        <span style={{ marginRight: '1rem' }}>Rate: {round > 0 ? (noEntWins / round * 100).toFixed(2) : '0.00'}%</span>
+                                        <span>Wins: {noEntWins}</span>
                                     </div>
-                                )}
-
-                                <div className="player-node bob">
-                                    👨 Bob
-                                    {roundData && currentStage === 'sending' && (
-                                        <div className="bit flying-to-bob">{roundData.y}</div>
-                                    )}
-                                    {roundData && currentStage !== 'sending' && currentStage !== 'ready' && (
-                                        <div className="bit static-on-bob">{roundData.y}</div>
-                                    )}
-                                    {roundData && currentStage === 'returning' && (
-                                        <div className="bit returning-from-bob">{roundData.outB ? 1 : 0}</div>
-                                    )}
-                                    {renderQuantumOverlay('bob')}
                                 </div>
+                                {renderAnimationArea(noEntRoundData, false)}
                             </div>
-
-                            {currentStage === 'result' && roundData && (
-                                <div className={`round-result-label ${roundData.win ? 'win' : 'loss'}`}>
-                                    {roundData.win ? 'SUCCESS!' : 'FAILURE'}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="controls">
-                            <button onClick={() => setPlayState(p => p === 'playing' ? 'paused' : 'playing')}>
-                                {playState === 'playing' ? '⏸ Pause' : '▶ Play'}
-                            </button>
-                            <button onClick={() => setSpeed(s => s === 1 ? 3 : s === 3 ? 10 : s === 10 ? 20 : s === 20 ? 50 : s === 50 ? 100 : 1)}>
-                                Speed: {speed}x
-                            </button>
-                            <button onClick={skipToEnd}>⏭ Skip to End</button>
-                        </div>
+                        )}
                     </div>
 
                     <div className="right-panes">
@@ -593,30 +689,59 @@ export const SimulationDashboard: React.FC<Props> = ({
                             </table>
                         </div>
 
-                        <div className="pane glass-panel stats-pane">
-                            <div className="stat-box">
-                                <span className="stat-label">Success Rate</span>
-                                <span className="stat-value">{successRate}%</span>
-                            </div>
-                            <div className="stat-box">
-                                <span className="stat-label">Wins</span>
-                                <span className="stat-value">{wins}</span>
-                            </div>
-                        </div>
-
-                        <div className="pane glass-panel graph-pane">
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                <h3 style={{ margin: 0 }}>Average Success Rate</h3>
-                                <button 
-                                    className="secondary-btn" 
+                        <div className="pane glass-panel graph-pane" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <h3 style={{ margin: 0, color: mode === 'quantum' ? 'var(--quantum-pink)' : 'white' }}>{mode === 'quantum' ? 'With Entanglement' : 'Average Success Rate'}</h3>
+                                <button
+                                    className="secondary-btn"
                                     style={{ fontSize: '0.8rem', padding: '0.25rem 0.75rem' }}
                                     onClick={() => setShowTheoreticalOptimum(prev => !prev)}
                                 >
                                     {showTheoreticalOptimum ? 'Hide Theoretical Max' : 'Show Theoretical Max'}
                                 </button>
                             </div>
-                            {renderGraph(false)}
+                            <div style={{ display: 'flex', justifyContent: 'space-around', background: 'rgba(0,0,0,0.2)', padding: '0.5rem', borderRadius: '8px' }}>
+                                <div className="stat-box" style={{ padding: 0, background: 'none', border: 'none', flexDirection: 'column' }}>
+                                    <span className="stat-label">Success Rate</span>
+                                    <span className="stat-value">{successRate}%</span>
+                                </div>
+                                <div className="stat-box" style={{ padding: 0, background: 'none', border: 'none', flexDirection: 'column' }}>
+                                    <span className="stat-label">Wins</span>
+                                    <span className="stat-value">{wins}</span>
+                                </div>
+                            </div>
+                            <div style={{ flex: 1, minHeight: '150px' }}>
+                                {renderGraph(false, historyRates, theoreticalOptimum, showTheoreticalOptimum, true)}
+                            </div>
                         </div>
+
+                        {mode === 'quantum' && (
+                            <div className="pane glass-panel graph-pane" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <h3 style={{ margin: 0, color: 'var(--text-muted)' }}>No Entanglement</h3>
+                                    <button
+                                        className="secondary-btn no-ent-btn"
+                                        style={{ fontSize: '0.8rem', padding: '0.25rem 0.75rem' }}
+                                        onClick={() => setShowNoEntTheoreticalOptimum(prev => !prev)}
+                                    >
+                                        {showNoEntTheoreticalOptimum ? 'Hide Theoretical Max' : 'Show Theoretical Max'}
+                                    </button>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-around', background: 'rgba(0,0,0,0.2)', padding: '0.5rem', borderRadius: '8px' }}>
+                                    <div className="stat-box" style={{ padding: 0, background: 'none', border: 'none', flexDirection: 'column' }}>
+                                        <span className="stat-label">Success Rate</span>
+                                        <span className="stat-value">{round > 0 ? (noEntWins / round * 100).toFixed(2) : '0.00'}%</span>
+                                    </div>
+                                    <div className="stat-box" style={{ padding: 0, background: 'none', border: 'none', flexDirection: 'column' }}>
+                                        <span className="stat-label">Wins</span>
+                                        <span className="stat-value">{noEntWins}</span>
+                                    </div>
+                                </div>
+                                <div style={{ flex: 1, minHeight: '150px' }}>
+                                    {renderGraph(false, noEntHistoryRates, noEntTheoreticalOptimum, showNoEntTheoreticalOptimum, false)}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

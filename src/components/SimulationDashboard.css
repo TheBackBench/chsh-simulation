@@ -57,7 +57,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.5rem;
 }
 
 .turn-counter {
@@ -71,12 +71,13 @@
 
 /* Animations Area */
 .animation-area {
-    flex: 1;
     position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 2rem 0;
+    margin: 1rem 0;
+    min-height: 320px;
+    width: 100%;
 }
 
 .computer-node {
@@ -130,6 +131,16 @@
     opacity: 1;
     text-shadow: 0 0 10px var(--quantum-pink);
     animation: quantumPulse 0.5s infinite alternate;
+}
+
+.quantum-link.no-ent {
+    color: var(--text-muted);
+}
+
+.quantum-link.no-ent.measured {
+    text-shadow: none;
+    animation: none;
+    opacity: 0.5;
 }
 
 @keyframes quantumPulse {
@@ -431,6 +442,41 @@
 @keyframes slideRightFade {
     0% { transform: translate(-10px, -50%); opacity: 0; }
     100% { transform: translate(0, -50%); opacity: 1; }
+}
+
+/* No Entanglement Overrides */
+.no-ent-overlay {
+    border-color: var(--glass-border) !important;
+    box-shadow: none !important;
+}
+
+.secondary-btn.no-ent-btn {
+    color: var(--text-muted) !important;
+    border-color: var(--text-muted) !important;
+}
+
+.secondary-btn.no-ent-btn:hover {
+    color: #fff !important;
+    border-color: #fff !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.no-ent-overlay .quantum-prob {
+    color: var(--text-muted) !important;
+}
+
+.no-ent-overlay .quantum-spin-result {
+    color: var(--text-muted) !important;
+    text-shadow: none !important;
+}
+
+.no-ent-overlay .laser-beam {
+    stroke: var(--text-muted) !important;
+    filter: none !important;
+}
+
+.no-ent-overlay .arrow-reveal {
+    stroke: var(--text-muted) !important;
 }
 
 /* Unit Circle and Measurement Animations */

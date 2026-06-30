@@ -66,6 +66,22 @@ export class EntangledPair {
     }
 }
 
+export class DummyPair extends EntangledPair {
+    measure(player: 'alice'|'bob', angleRad: number): boolean {
+        if (!this.firstMeasured) {
+            this.firstMeasured = player;
+            this.firstAngle = angleRad;
+            this.firstResult = Math.random() < 0.5;
+            return this.firstResult;
+        } else {
+            this.secondMeasured = player;
+            this.secondAngle = angleRad;
+            this.secondResult = Math.random() < 0.5; // Always 50/50, NO ENTANGLEMENT
+            return this.secondResult;
+        }
+    }
+}
+
 function evaluateAST(
     node: BlockNode | null, 
     instruction: number, 
@@ -134,7 +150,8 @@ export function playSingleRound(
     mode: 'classical' | 'quantum',
     evaluationOrder: 'alice' | 'bob' | 'random',
     classicalStrategy: ClassicalStrategy,
-    quantumStrategy: QuantumStrategy
+    quantumStrategy: QuantumStrategy,
+    simulateNoEntanglement: boolean = false
 ): RoundResult {
     const x = Math.random() < 0.5 ? 0 : 1;
     const y = Math.random() < 0.5 ? 0 : 1;
@@ -155,15 +172,27 @@ export function playSingleRound(
             outA = evaluateAST(classicalStrategy.alice, x, classicalStrategy.aliceDefault);
         }
     } else {
-        pair = new EntangledPair();
-        if (isAliceFirst) {
-            outA = evaluateAST(quantumStrategy.alice, x, quantumStrategy.aliceDefault, pair, 'alice');
-            outB = evaluateAST(quantumStrategy.bob, y, quantumStrategy.bobDefault, pair, 'bob');
+        if (simulateNoEntanglement) {
+            pair = new DummyPair();
+            if (isAliceFirst) {
+                outA = evaluateAST(quantumStrategy.alice, x, quantumStrategy.aliceDefault, pair, 'alice');
+                outB = evaluateAST(quantumStrategy.bob, y, quantumStrategy.bobDefault, pair, 'bob');
+            } else {
+                outB = evaluateAST(quantumStrategy.bob, y, quantumStrategy.bobDefault, pair, 'bob');
+                outA = evaluateAST(quantumStrategy.alice, x, quantumStrategy.aliceDefault, pair, 'alice');
+            }
+            quantumMeasured = pair.firstMeasured !== null;
         } else {
-            outB = evaluateAST(quantumStrategy.bob, y, quantumStrategy.bobDefault, pair, 'bob');
-            outA = evaluateAST(quantumStrategy.alice, x, quantumStrategy.aliceDefault, pair, 'alice');
+            pair = new EntangledPair();
+            if (isAliceFirst) {
+                outA = evaluateAST(quantumStrategy.alice, x, quantumStrategy.aliceDefault, pair, 'alice');
+                outB = evaluateAST(quantumStrategy.bob, y, quantumStrategy.bobDefault, pair, 'bob');
+            } else {
+                outB = evaluateAST(quantumStrategy.bob, y, quantumStrategy.bobDefault, pair, 'bob');
+                outA = evaluateAST(quantumStrategy.alice, x, quantumStrategy.aliceDefault, pair, 'alice');
+            }
+            quantumMeasured = pair.firstMeasured !== null;
         }
-        quantumMeasured = pair.firstMeasured !== null;
     }
 
     const win = checkWin(x, y, outA, outB);
