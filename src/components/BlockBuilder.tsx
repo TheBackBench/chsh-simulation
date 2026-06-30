@@ -138,7 +138,7 @@ export const BlockBuilder: React.FC<Props> = ({ node, onChange }) => {
     if (node.type === 'RETURN') {
         return (
             <div className="block-builder">
-                <div className="block block-action">
+                <div className="block block-action has-tooltip" data-tooltip="Returns the chosen answer (True=1, False=0) and ends the turn.">
                     <button className="block-delete" onClick={() => onChange(null)}>✕</button>
                     <strong>Return</strong> {node.value ? 'True' : 'False'}
                 </div>
@@ -149,7 +149,7 @@ export const BlockBuilder: React.FC<Props> = ({ node, onChange }) => {
     if (node.type === 'PROB') {
         return (
             <div className="block-builder">
-                <div className="block block-prob">
+                <div className="block block-prob has-tooltip" data-tooltip="Returns True with the specified probability, otherwise returns False. Introduces randomness to the strategy.">
                     <button className="block-delete" onClick={() => onChange(null)}>✕</button>
                     <strong>Return True with Probability of </strong>
                     <ProbInput
@@ -164,7 +164,7 @@ export const BlockBuilder: React.FC<Props> = ({ node, onChange }) => {
     if (node.type === 'MEASURE_SPIN') {
         return (
             <div className="block-builder">
-                <div className="block block-action quantum-action">
+                <div className="block block-action quantum-action has-tooltip" data-tooltip="Measures your entangled qubit at the chosen angle. Returns True if spin is Up, False if spin is Down.">
                     <button className="block-delete" onClick={() => onChange(null)}>✕</button>
                     <strong>Measure Spin at Angle</strong>
                     <AnglePicker
@@ -179,7 +179,7 @@ export const BlockBuilder: React.FC<Props> = ({ node, onChange }) => {
     if (node.type === 'IF_ELSE') {
         return (
             <div className="block-builder">
-                <div className="block block-if">
+                <div className="block block-if has-tooltip" data-tooltip="Checks a condition. If it is met, it runs the 'If' branch. Otherwise, it runs the 'Else' branch.">
                     <button className="block-delete" onClick={() => onChange(null)}>✕</button>
                     <div className="block-header">
                         <strong>If</strong>
@@ -245,7 +245,7 @@ const ConditionBuilder: React.FC<{ condition: ConditionNode | null, onChange: (c
 
         if (condition.type === 'PROB_COND') {
             return (
-                <div className="block-condition">
+                <div className="block-condition has-tooltip" data-tooltip="Evaluates to True with the specified probability, introducing random choice to the condition.">
                     <strong>Probability</strong>
                     <ProbInput
                         value={condition.prob}
@@ -258,7 +258,7 @@ const ConditionBuilder: React.FC<{ condition: ConditionNode | null, onChange: (c
 
         if (condition.type === 'MEASURE_SPIN_COND') {
             return (
-                <div className="block-condition quantum-action">
+                <div className="block-condition quantum-action has-tooltip" data-tooltip="Measures your entangled qubit at the chosen angle and evaluates to True if the result matches the selected spin direction.">
                     <strong>Spin at</strong>
                     <AnglePicker
                         angle={condition.angle}
@@ -279,7 +279,7 @@ const ConditionBuilder: React.FC<{ condition: ConditionNode | null, onChange: (c
         }
 
         return (
-            <div className="block-condition">
+            <div className="block-condition has-tooltip" data-tooltip="Checks if the bit received from the referee matches the expected value.">
                 <strong>Received {condition.expected}</strong>
                 <button style={{ background: 'transparent', border: 'none', color: '#000', cursor: 'pointer', fontWeight: 'bold', marginLeft: '4px' }} onClick={() => onChange(null)}>✕</button>
             </div>

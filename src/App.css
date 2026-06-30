@@ -48,3 +48,41 @@
     font-size: 0.9rem;
     flex-shrink: 0;
 }
+
+.has-tooltip {
+    position: relative;
+}
+
+.has-tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: rgba(0, 0, 0, 0.95);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    white-space: normal;
+    min-width: 220px;
+    text-align: center;
+    z-index: 1000;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    pointer-events: none;
+    font-family: 'Inter', sans-serif;
+    font-weight: normal;
+    text-shadow: none;
+    line-height: 1.4;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+}
+
+.has-tooltip:hover::after {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}

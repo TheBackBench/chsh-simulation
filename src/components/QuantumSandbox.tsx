@@ -10,12 +10,13 @@ interface Props {
     onHelpClick?: () => void;
 }
 
-const DraggableBlock: React.FC<{ type: string, label: string, className: string }> = ({ type, label, className }) => {
+const DraggableBlock: React.FC<{ type: string, label: string, className: string, title?: string }> = ({ type, label, className, title }) => {
     return (
         <div
-            className={`block ${className}`}
+            className={`block ${className} ${title ? 'has-tooltip' : ''}`}
             style={{ display: 'inline-block', margin: '4px', cursor: 'grab', fontSize: '0.9rem' }}
             draggable
+            data-tooltip={title}
             onDragStart={(e) => {
                 e.dataTransfer.setData('blockType', type);
             }}
@@ -101,10 +102,10 @@ export const QuantumSandbox: React.FC<Props> = ({ strategy, setStrategy, isActiv
                     <div className="palette-sub-area" style={{ flex: 1, minWidth: '240px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '8px', padding: '1rem' }}>
                         <h4 style={{ margin: '0 0 0.75rem 0', color: 'var(--quantum-pink)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem', textAlign: 'center' }}>Base Blocks</h4>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
-                            <DraggableBlock type="IF_ELSE" label="If / Else" className="block-if" />
+                            <DraggableBlock type="IF_ELSE" label="If / Else" className="block-if" title="Checks a condition. If it is met, it runs the 'If' branch. Otherwise, it runs the 'Else' branch." />
                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                                <DraggableBlock type="RETURN_TRUE" label="Return True" className="block-action" />
-                                <DraggableBlock type="RETURN_FALSE" label="Return False" className="block-action" />
+                                <DraggableBlock type="RETURN_TRUE" label="Return True" className="block-action" title="Returns True (1) and ends the turn." />
+                                <DraggableBlock type="RETURN_FALSE" label="Return False" className="block-action" title="Returns False (0) and ends the turn." />
                             </div>
                         </div>
                     </div>
@@ -112,11 +113,11 @@ export const QuantumSandbox: React.FC<Props> = ({ strategy, setStrategy, isActiv
                     <div className="palette-sub-area" style={{ flex: 1, minWidth: '240px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '8px', padding: '1rem' }}>
                         <h4 style={{ margin: '0 0 0.75rem 0', color: 'var(--quantum-pink)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem', textAlign: 'center' }}>Condition Blocks</h4>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
-                            <DraggableBlock type="MEASURE_SPIN_COND" label="Spin is Up/Down" className="block-condition quantum-action" />
+                            <DraggableBlock type="MEASURE_SPIN_COND" label="Spin is Up/Down" className="block-condition quantum-action" title="Measures your entangled qubit at the chosen angle and evaluates to True if the result matches the selected spin direction." />
                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                                <DraggableBlock type="RECEIVED_1" label="Received 1" className="block-condition" />
-                                <DraggableBlock type="RECEIVED_0" label="Received 0" className="block-condition" />
-                                <DraggableBlock type="PROB_COND" label="Probability %" className="block-condition" />
+                                <DraggableBlock type="RECEIVED_1" label="Received 1" className="block-condition" title="Checks if the bit received from the referee is 1." />
+                                <DraggableBlock type="RECEIVED_0" label="Received 0" className="block-condition" title="Checks if the bit received from the referee is 0." />
+                                <DraggableBlock type="PROB_COND" label="Probability %" className="block-condition" title="Evaluates to True with the specified probability." />
                             </div>
                         </div>
                     </div>
