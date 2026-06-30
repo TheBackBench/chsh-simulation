@@ -22,20 +22,7 @@ type RoundStage =
     | 'returning' 
     | 'result';
 
-const estimateExpectedRate = (
-    mode: 'classical' | 'quantum',
-    evaluationOrder: 'alice' | 'bob' | 'random',
-    classicalStrategy: ClassicalStrategy,
-    quantumStrategy: QuantumStrategy
-): number => {
-    let wins = 0;
-    const runs = 20000;
-    for (let i = 0; i < runs; i++) {
-        const result = playSingleRound(mode, evaluationOrder, classicalStrategy, quantumStrategy);
-        if (result.win) wins++;
-    }
-    return (wins / runs) * 100;
-};
+
 
 export const SimulationDashboard: React.FC<Props> = ({
     mode, nGames, evaluationOrder, classicalStrategy, quantumStrategy, onClose
@@ -57,9 +44,8 @@ export const SimulationDashboard: React.FC<Props> = ({
 
     const baseDelay = 1600 / speed;
 
-    const expectedRate = React.useMemo(() => {
-        return estimateExpectedRate(mode, evaluationOrder, classicalStrategy, quantumStrategy);
-    }, [mode, evaluationOrder, classicalStrategy, quantumStrategy]);
+    const [showTheoreticalOptimum, setShowTheoreticalOptimum] = useState(false);
+    const theoreticalOptimum = mode === 'classical' ? 75 : 85.355;
 
     const skipToEnd = () => {
         setPlayState('finished');
@@ -217,7 +203,7 @@ export const SimulationDashboard: React.FC<Props> = ({
             path = `M ${points.join(' L ')}`;
         }
 
-        const limitY = yCoord(expectedRate);
+        const limitY = yCoord(theoreticalOptimum);
 
         // Generate Y-axis grid lines and labels
         const yTicks = [0, 25, 50, 75, 100];
@@ -301,11 +287,15 @@ export const SimulationDashboard: React.FC<Props> = ({
                 <line x1={leftMargin} y1={topMargin} x2={leftMargin} y2={height - bottomMargin} stroke="#666" />
                 <line x1={leftMargin} y1={height - bottomMargin} x2={width - rightMargin} y2={height - bottomMargin} stroke="#666" />
 
-                {/* Expected Limit Line */}
-                <line x1={leftMargin} y1={limitY} x2={width - rightMargin} y2={limitY} stroke="#ff4444" strokeDasharray="4" />
-                <text x={width - rightMargin - 75} y={limitY - 5} fill="#ff4444" fontSize={fontSize - 0.5} fontWeight="bold">
-                    Expected: {expectedRate.toFixed(1)}%
-                </text>
+                {/* Theoretical Limit Line */}
+                {showTheoreticalOptimum && (
+                    <>
+                        <line x1={leftMargin} y1={limitY} x2={width - rightMargin} y2={limitY} stroke="#ff4444" strokeDasharray="4" />
+                        <text x={width - rightMargin - 100} y={limitY - 5} fill="#ff4444" fontSize={fontSize - 0.5} fontWeight="bold">
+                            Theoretical Max: {theoreticalOptimum.toFixed(1)}%
+                        </text>
+                    </>
+                )}
 
                 {/* Success Rate Path */}
                 {path && <path d={path} fill="none" stroke="var(--accent-teal)" strokeWidth="2" />}
@@ -475,15 +465,21 @@ export const SimulationDashboard: React.FC<Props> = ({
                                 <span className="stat-label">Wins</span>
                                 <span className="stat-value">{wins}</span>
                             </div>
-                            <div className="stat-box">
-                                <span className="stat-label">Expected Rate</span>
-                                <span className="stat-value">{expectedRate.toFixed(1)}%</span>
-                            </div>
+
                         </div>
                     </div>
 
                     <div className="pane glass-panel graph-pane finished-graph">
-                        <h3>Average Success Rate</h3>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                            <h3 style={{ margin: 0 }}>Average Success Rate</h3>
+                            <button 
+                                className="secondary-btn" 
+                                style={{ fontSize: '0.8rem', padding: '0.25rem 0.75rem' }}
+                                onClick={() => setShowTheoreticalOptimum(prev => !prev)}
+                            >
+                                {showTheoreticalOptimum ? 'Hide Theoretical Max' : 'Show Theoretical Max'}
+                            </button>
+                        </div>
                         {renderGraph(true)}
                     </div>
 
@@ -609,7 +605,16 @@ export const SimulationDashboard: React.FC<Props> = ({
                         </div>
 
                         <div className="pane glass-panel graph-pane">
-                            <h3>Average Success Rate</h3>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                <h3 style={{ margin: 0 }}>Average Success Rate</h3>
+                                <button 
+                                    className="secondary-btn" 
+                                    style={{ fontSize: '0.8rem', padding: '0.25rem 0.75rem' }}
+                                    onClick={() => setShowTheoreticalOptimum(prev => !prev)}
+                                >
+                                    {showTheoreticalOptimum ? 'Hide Theoretical Max' : 'Show Theoretical Max'}
+                                </button>
+                            </div>
                             {renderGraph(false)}
                         </div>
                     </div>
