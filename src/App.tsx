@@ -7,10 +7,11 @@ import { RulesSidebar } from './components/RulesSidebar';
 import { SimulationDashboard } from './components/SimulationDashboard';
 import { ClassicalStrategy, QuantumStrategy } from './engine/Simulation';
 import './App.css';
+import { Theory } from './components/Theory';
 import Tutorial from './components/Tutorial';
 
 function App() {
-    const [mode, setMode] = useState<'how-to' | 'classical' | 'quantum'>('how-to');
+    const [mode, setMode] = useState<'how-to' | 'classical' | 'quantum' | 'theory'>('how-to');
     const [nGames, setNGames] = useState(1000);
     const [evaluationOrder, setEvaluationOrder] = useState<'alice' | 'bob' | 'random'>('random');
     const [isAnimating, setIsAnimating] = useState(false);
@@ -41,7 +42,7 @@ function App() {
         setIsAnimating(true);
     };
 
-    const handleModeChange = (newMode: 'how-to' | 'classical' | 'quantum') => {
+    const handleModeChange = (newMode: 'how-to' | 'classical' | 'quantum' | 'theory') => {
         setMode(newMode);
 
         if (newMode === 'quantum' && !hasSeenQuantumPopup) {
@@ -147,14 +148,21 @@ function App() {
                     >
                         Quantum Mode
                     </button>
+                    <button
+                        className={`mode-btn ${mode === 'theory' ? 'active' : ''}`}
+                        onClick={() => handleModeChange('theory')}
+                    >
+                        Math & Physics
+                    </button>
                 </div>
 
                 <main>
                     <HowToPlay isActive={mode === 'how-to'} />
                     <ClassicalSandbox isActive={mode === 'classical'} strategy={classicalStrategy} setStrategy={setClassicalStrategy} />
                     <QuantumSandbox isActive={mode === 'quantum'} strategy={quantumStrategy} setStrategy={setQuantumStrategy} onHelpClick={() => setShowQuantumPopup(true)} />
+                    <Theory isActive={mode === 'theory'} />
 
-                    {mode !== 'how-to' && (
+                    {mode !== 'how-to' && mode !== 'theory' && (
                         <section className="simulation-controls">
                             <div className="run-panel glass-panel">
                             <div className="input-group inline">
