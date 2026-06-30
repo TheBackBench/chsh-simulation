@@ -112,10 +112,10 @@ function App() {
                     <p className="subtitle">Explore the limits of local hidden-variables vs quantum non-locality</p>
                 </header>
 
-                <div className="main-layout" style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
+                <div className="main-layout" style={{ display: 'flex', flexDirection: 'column', gap: '2rem', alignItems: 'center', width: '100%' }}>
                     {!isAnimating && <RulesSidebar />}
 
-                    <div className="content-area" style={{ flex: 1, minWidth: 0 }}>
+                    <div className="content-area" style={{ width: '100%' }}>
                         {isAnimating ? (
                             <SimulationDashboard
                                 mode={mode as 'classical' | 'quantum'}
