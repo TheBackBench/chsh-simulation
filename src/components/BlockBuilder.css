@@ -145,6 +145,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    white-space: nowrap;
 }
 
 .block-condition {
@@ -160,6 +161,7 @@
     gap: 6px;
     box-shadow: none !important;
     z-index: 1;
+    white-space: nowrap;
 }
 
 .block-condition::before {
