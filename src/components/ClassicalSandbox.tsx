@@ -34,6 +34,15 @@ export const ClassicalSandbox: React.FC<Props> = ({ strategy, setStrategy, isAct
         setStrategy(prev => ({ ...prev, bob: node }));
     };
 
+    const loadOptimal = () => {
+        setStrategy({
+            alice: { type: 'RETURN', value: true },
+            bob: { type: 'RETURN', value: true },
+            aliceDefault: true,
+            bobDefault: true
+        });
+    };
+
     return (
         <section id="classical-sandbox" className="sandbox active">
             <div className="sandbox-header">
@@ -121,6 +130,10 @@ export const ClassicalSandbox: React.FC<Props> = ({ strategy, setStrategy, isAct
                         </select>
                     </div>
                 </div>
+            </div>
+
+            <div className="preset-controls">
+                <button className="secondary-btn" onClick={loadOptimal}>Reveal Optimal Strategy</button>
             </div>
         </section>
     );
