@@ -151,10 +151,12 @@ export function playSingleRound(
     evaluationOrder: 'alice' | 'bob' | 'random',
     classicalStrategy: ClassicalStrategy,
     quantumStrategy: QuantumStrategy,
-    simulateNoEntanglement: boolean = false
+    simulateNoEntanglement: boolean = false,
+    forcedX?: number,
+    forcedY?: number
 ): RoundResult {
-    const x = Math.random() < 0.5 ? 0 : 1;
-    const y = Math.random() < 0.5 ? 0 : 1;
+    const x = forcedX !== undefined ? forcedX : (Math.random() < 0.5 ? 0 : 1);
+    const y = forcedY !== undefined ? forcedY : (Math.random() < 0.5 ? 0 : 1);
     let outA: boolean, outB: boolean;
     let quantumMeasured = false;
     let pair: EntangledPair | null = null;

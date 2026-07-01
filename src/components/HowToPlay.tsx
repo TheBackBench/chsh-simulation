@@ -21,7 +21,7 @@ export const HowToPlay: React.FC<{ isActive: boolean }> = ({ isActive }) => {
             <h3 style={{ marginTop: '2rem', marginBottom: '0.75rem', color: 'var(--quantum-pink)', fontSize: '1.3rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Quantum Mode</h3>
             <p style={{ marginBottom: '1rem', color: 'var(--text-muted)' }}>
                 In Quantum Mode, Alice and Bob share an entangled pair of particles. Instead of just looking at their received bit, they can perform quantum measurements! 
-                Drag the <strong style={{ color: 'var(--quantum-pink)' }}>Condition: Spin is Up/Down</strong> block to measure the spin of their particle along a specific angle. 
+                Drag the <strong style={{ color: 'var(--quantum-pink)' }}>Condition: Spin at ___ is Up/Down</strong> block to measure the spin of their particle along a specific angle. 
                 The difference between the angles chosen by Alice and Bob alters the probability of their results aligning, unlocking higher win rates due to quantum non-locality.
             </p>
             

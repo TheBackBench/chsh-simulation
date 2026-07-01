@@ -96,29 +96,42 @@ export const QuantumSandbox: React.FC<Props> = ({ strategy, setStrategy, isActiv
             </div>
 
             <div className="palette glass-panel" style={{ padding: '1.25rem', marginBottom: '2rem' }}>
-                <h3 style={{ margin: '0 0 0.5rem 0', textAlign: 'center' }}>Block Palette</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <div style={{ flex: 1 }}></div>
+                    <h3 style={{ margin: 0, textAlign: 'center', flex: 1 }}>Block Palette</h3>
+                    <div style={{ flex: 1, textAlign: 'right' }}>
+                        <button 
+                            className="secondary-btn" 
+                            onClick={loadOptimal} 
+                            title="Automatically build the optimal strategy that achieves the maximum possible success rate."
+                            style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}
+                        >
+                            Build Optimal Strategy
+                        </button>
+                    </div>
+                </div>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem', textAlign: 'center' }}>Drag blocks from here into the slots below.</p>
 
                 <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', alignItems: 'stretch', flexWrap: 'wrap' }}>
                     <div className="palette-sub-area" style={{ flex: 1, minWidth: '240px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '8px', padding: '1rem' }}>
                         <h4 style={{ margin: '0 0 0.75rem 0', color: 'var(--quantum-pink)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem', textAlign: 'center' }}>Base Blocks</h4>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
-                            <DraggableBlock type="IF_ELSE" label="If / Else" className="block-if" title="Checks a condition. If it is met, it runs the 'If' branch. Otherwise, it runs the 'Else' branch." />
+                            <DraggableBlock type="IF_ELSE" label="If / Else" className="block-if" title="Branches based on condition" />
                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                                <DraggableBlock type="RETURN_TRUE" label="Return True" className="block-action" title="Returns True (1) and ends the turn." />
-                                <DraggableBlock type="RETURN_FALSE" label="Return False" className="block-action" title="Returns False (0) and ends the turn." />
+                                <DraggableBlock type="RETURN_TRUE" label="Return True" className="block-action" title="Returns True (1) and ends turn" />
+                                <DraggableBlock type="RETURN_FALSE" label="Return False" className="block-action" title="Returns False (0) and ends turn" />
                             </div>
                         </div>
                     </div>
-                    
+
                     <div className="palette-sub-area" style={{ flex: 1, minWidth: '240px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '8px', padding: '1rem' }}>
                         <h4 style={{ margin: '0 0 0.75rem 0', color: 'var(--quantum-pink)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem', textAlign: 'center' }}>Condition Blocks</h4>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
-                            <DraggableBlock type="MEASURE_SPIN_COND" label="Spin is Up/Down" className="block-condition quantum-action" title="Measures your entangled qubit at the chosen angle and evaluates to True if the result matches the selected spin direction." />
+                            <DraggableBlock type="MEASURE_SPIN_COND" label="Spin at _ is Up/Down" className="block-condition quantum-action" title="Measures entangled qubit at chosen angle" />
                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                                <DraggableBlock type="RECEIVED_1" label="Received 1" className="block-condition" title="Checks if the bit received from the referee is 1." />
-                                <DraggableBlock type="RECEIVED_0" label="Received 0" className="block-condition" title="Checks if the bit received from the referee is 0." />
-                                <DraggableBlock type="PROB_COND" label="Probability %" className="block-condition" title="Evaluates to True with the specified probability." />
+                                <DraggableBlock type="RECEIVED_1" label="Received 1" className="block-condition" title="Checks if received bit is 1" />
+                                <DraggableBlock type="RECEIVED_0" label="Received 0" className="block-condition" title="Checks if received bit is 0" />
+                                <DraggableBlock type="PROB_COND" label="Probability of _%" className="block-condition" title="Evaluates to True with specified probability" />
                             </div>
                         </div>
                     </div>
@@ -180,9 +193,6 @@ export const QuantumSandbox: React.FC<Props> = ({ strategy, setStrategy, isActiv
                 </div>
             </div>
 
-            <div className="preset-controls">
-                <button className="secondary-btn" onClick={loadOptimal}>Reveal Optimal Strategy</button>
-            </div>
         </section>
     );
 };

@@ -138,7 +138,7 @@ export const BlockBuilder: React.FC<Props> = ({ node, onChange }) => {
     if (node.type === 'RETURN') {
         return (
             <div className="block-builder">
-                <div className="has-tooltip" data-tooltip="Returns the chosen answer (True=1, False=0) and ends the turn." style={{ display: 'inline-block' }}>
+                <div style={{ display: 'inline-block' }}>
                     <div className="block block-action">
                         <button className="block-delete" onClick={() => onChange(null)}>✕</button>
                         <strong>Return</strong> {node.value ? 'True' : 'False'}
@@ -151,7 +151,7 @@ export const BlockBuilder: React.FC<Props> = ({ node, onChange }) => {
     if (node.type === 'PROB') {
         return (
             <div className="block-builder">
-                <div className="has-tooltip" data-tooltip="Returns True with the specified probability, otherwise returns False. Introduces randomness to the strategy." style={{ display: 'inline-block' }}>
+                <div style={{ display: 'inline-block' }}>
                     <div className="block block-prob">
                         <button className="block-delete" onClick={() => onChange(null)}>✕</button>
                         <strong>Return True with Probability of </strong>
@@ -168,7 +168,7 @@ export const BlockBuilder: React.FC<Props> = ({ node, onChange }) => {
     if (node.type === 'MEASURE_SPIN') {
         return (
             <div className="block-builder">
-                <div className="has-tooltip" data-tooltip="Measures your entangled qubit at the chosen angle. Returns True if spin is Up, False if spin is Down." style={{ display: 'inline-block' }}>
+                <div style={{ display: 'inline-block' }}>
                     <div className="block block-action quantum-action">
                         <button className="block-delete" onClick={() => onChange(null)}>✕</button>
                         <strong>Measure Spin at Angle</strong>
@@ -185,11 +185,11 @@ export const BlockBuilder: React.FC<Props> = ({ node, onChange }) => {
     if (node.type === 'IF_ELSE') {
         return (
             <div className="block-builder">
-                <div className="has-tooltip" data-tooltip="Checks a condition. If it is met, it runs the 'If' branch. Otherwise, it runs the 'Else' branch." style={{ display: 'inline-block', width: '100%' }}>
+                <div style={{ display: 'inline-block', width: '100%' }}>
                     <div className="block block-if">
                         <button className="block-delete" onClick={() => onChange(null)}>✕</button>
                         <div className="block-header">
-                            <strong>If</strong>
+                            <strong>{node.condition?.type === 'PROB_COND' ? 'With' : 'If'}</strong>
                             <ConditionBuilder
                                 condition={node.condition}
                                 onChange={(cond) => onChange({ ...node, condition: cond })}
@@ -253,9 +253,9 @@ const ConditionBuilder: React.FC<{ condition: ConditionNode | null, onChange: (c
 
         if (condition.type === 'PROB_COND') {
             return (
-                <div className="has-tooltip" data-tooltip="Evaluates to True with the specified probability, introducing random choice to the condition." style={{ display: 'inline-block' }}>
+                <div style={{ display: 'inline-block' }}>
                     <div className="block-condition">
-                        <strong>Probability</strong>
+                        <strong>Probability of</strong>
                         <ProbInput
                             value={condition.prob}
                             onChange={(val) => onChange({ ...condition, prob: val })}
@@ -268,7 +268,7 @@ const ConditionBuilder: React.FC<{ condition: ConditionNode | null, onChange: (c
 
         if (condition.type === 'MEASURE_SPIN_COND') {
             return (
-                <div className="has-tooltip" data-tooltip="Measures your entangled qubit at the chosen angle and evaluates to True if the result matches the selected spin direction." style={{ display: 'inline-block' }}>
+                <div style={{ display: 'inline-block' }}>
                     <div className="block-condition quantum-action">
                         <strong>Spin at</strong>
                         <AnglePicker
@@ -291,7 +291,7 @@ const ConditionBuilder: React.FC<{ condition: ConditionNode | null, onChange: (c
         }
 
         return (
-            <div className="has-tooltip" data-tooltip="Checks if the bit received from the referee matches the expected value." style={{ display: 'inline-block' }}>
+            <div style={{ display: 'inline-block' }}>
                 <div className="block-condition">
                     <strong>Received {condition.expected}</strong>
                     <button style={{ background: 'transparent', border: 'none', color: '#000', cursor: 'pointer', fontWeight: 'bold', marginLeft: '4px' }} onClick={() => onChange(null)}>✕</button>

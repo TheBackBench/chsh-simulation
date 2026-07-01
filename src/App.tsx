@@ -19,6 +19,7 @@ function App() {
     const [hasSeenQuantumPopup, setHasSeenQuantumPopup] = useState(() => localStorage.getItem('hasSeenQuantumPopup') === 'true');
     const [hasVisited, setHasVisited] = useState(() => localStorage.getItem('hasVisited') === 'true');
     const [cookieConsent, setCookieConsent] = useState(() => localStorage.getItem('cookieConsent') === 'true');
+    const [compareClassical, setCompareClassical] = useState(false);
 
     const [classicalStrategy, setClassicalStrategy] = useState<ClassicalStrategy>({
         alice: null,
@@ -124,6 +125,7 @@ function App() {
                                 evaluationOrder={evaluationOrder}
                                 classicalStrategy={classicalStrategy}
                                 quantumStrategy={quantumStrategy}
+                                compareClassical={compareClassical}
                                 onClose={() => setIsAnimating(false)}
                             />
                         ) : (
@@ -193,6 +195,20 @@ function App() {
                                     <option value="random">Random (Per Game)</option>
                                 </select>
                             </div>
+                            {mode === 'quantum' && (
+                                <div className="input-group inline" style={{ display: 'flex', alignItems: 'center' }}>
+                                    <label htmlFor="compare-classical" style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', margin: 0 }}>
+                                        <input
+                                            type="checkbox"
+                                            id="compare-classical"
+                                            checked={compareClassical}
+                                            onChange={(e) => setCompareClassical(e.target.checked)}
+                                            style={{ marginRight: '8px', cursor: 'pointer' }}
+                                        />
+                                        Compare to Classical (No Entanglement)
+                                    </label>
+                                </div>
+                            )}
                             <button
                                 className={`run-btn ${mode === 'quantum' ? 'quantum' : ''}`}
                                 onClick={handleRun}

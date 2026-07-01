@@ -331,6 +331,7 @@ input[type="number"]:focus {
     text-transform: uppercase;
     letter-spacing: 1px;
     min-width: 100px;
+    text-align: center;
 }
 
 .link-line {
