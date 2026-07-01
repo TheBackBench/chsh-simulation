@@ -59,7 +59,9 @@
     bottom: 100%;
     left: 50%;
     transform: translateX(-50%) translateY(10px);
-    background: rgba(0, 0, 0, 0.95);
+    background: 
+        linear-gradient(rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.95)) padding-box,
+        linear-gradient(135deg, var(--accent-teal, #00f0ff), var(--quantum-pink, #ff007f)) border-box;
     color: white;
     padding: 8px 12px;
     border-radius: 6px;
@@ -69,8 +71,8 @@
     text-align: center;
     z-index: 1000;
     margin-bottom: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    border: 1px solid transparent;
     pointer-events: none;
     font-family: 'Inter', sans-serif;
     font-weight: normal;

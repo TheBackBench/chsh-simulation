@@ -10,16 +10,17 @@ interface Props {
 
 const DraggableBlock: React.FC<{ type: string, label: string, className: string, title?: string }> = ({ type, label, className, title }) => {
     return (
-        <div
-            className={`block ${className} ${title ? 'has-tooltip' : ''}`}
-            style={{ display: 'inline-block', margin: '4px', cursor: 'grab', fontSize: '0.9rem' }}
-            draggable
-            data-tooltip={title}
-            onDragStart={(e) => {
-                e.dataTransfer.setData('blockType', type);
-            }}
-        >
-            {label}
+        <div className={title ? 'has-tooltip' : ''} data-tooltip={title} style={{ display: 'inline-block', margin: '4px' }}>
+            <div
+                className={`block ${className}`}
+                style={{ cursor: 'grab', fontSize: '0.9rem' }}
+                draggable
+                onDragStart={(e) => {
+                    e.dataTransfer.setData('blockType', type);
+                }}
+            >
+                {label}
+            </div>
         </div>
     );
 };
