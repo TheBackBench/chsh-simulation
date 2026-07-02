@@ -30,7 +30,7 @@ export const SimulationDashboard: React.FC<Props> = ({
 }) => {
     const [round, setRound] = useState(0);
     const [playState, setPlayState] = useState<PlayState>('playing');
-    const [speed, setSpeed] = useState<1 | 3 | 10 | 20 | 50 | 100>(1);
+    const [speed, setSpeed] = useState<1 | 2 | 5 | 10 | 50 | 100>(1);
 
     // Stats
     const [wins, setWins] = useState(0);
@@ -123,10 +123,11 @@ export const SimulationDashboard: React.FC<Props> = ({
             let data = roundData;
             let noEntData = noEntRoundData;
             if (!data) {
-                data = playSingleRound(mode, evaluationOrder, classicalStrategy, quantumStrategy);
+                const effectiveOrder = evaluationOrder === 'random' ? (Math.random() < 0.5 ? 'alice' : 'bob') : evaluationOrder;
+                data = playSingleRound(mode, effectiveOrder, classicalStrategy, quantumStrategy);
                 setRoundData(data);
                 if (mode === 'quantum' && compareClassical) {
-                    noEntData = playSingleRound(mode, evaluationOrder, classicalStrategy, quantumStrategy, true, data.x, data.y);
+                    noEntData = playSingleRound(mode, effectiveOrder, classicalStrategy, quantumStrategy, true, data.x, data.y);
                     setNoEntRoundData(noEntData);
                 }
             }
@@ -217,7 +218,7 @@ export const SimulationDashboard: React.FC<Props> = ({
             isCancelled = true;
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [round, playState, speed, wins, mode, nGames, evaluationOrder, classicalStrategy, quantumStrategy, noEntWins]);
+    }, [round, playState, speed, mode, nGames, evaluationOrder, classicalStrategy, quantumStrategy]);
 
     const successRate = round > 0 ? (wins / round * 100).toFixed(2) : '0.00';
 
@@ -396,11 +397,11 @@ export const SimulationDashboard: React.FC<Props> = ({
         collapsedState?: { angle: number; resultUp: boolean }
     ) => {
         const rad = (angle * Math.PI) / 180;
-        const labelX = 33 * Math.cos(rad);
-        const labelY = -33 * Math.sin(rad);
+        const labelX = 36 * Math.cos(rad);
+        const labelY = -36 * Math.sin(rad);
 
         return (
-            <svg width="90" height="90" viewBox="-38 -38 76 76" className="unit-circle-svg">
+            <svg width="100" height="100" viewBox="-50 -50 100 100" className="unit-circle-svg">
                 <circle cx="0" cy="0" r="24" className="circle-outline" />
                 <line x1="-28" y1="0" x2="28" y2="0" className="axis-faint" />
                 <line x1="0" y1="-28" x2="0" y2="28" className="axis-faint" />
@@ -555,14 +556,14 @@ export const SimulationDashboard: React.FC<Props> = ({
         </div>
     );
 
-    const renderColResult = (rowX: number, rowY: number, data: RoundResult | null) => {
+    const renderColResult = (rowX: number, rowY: number, data: RoundResult | null, isClassical: boolean = false) => {
         if (!data || data.x !== rowX || data.y !== rowY) return <span style={{ color: 'var(--text-muted)' }}>-</span>;
         if (currentStage === 'result') {
             return data.win
                 ? <span style={{ color: '#00f59f', fontWeight: 'bold' }}>WIN</span>
                 : <span style={{ color: '#ff4444', fontWeight: 'bold' }}>LOSS</span>;
         }
-        return <span style={{ color: 'var(--accent-teal)' }}>...</span>;
+        return <span style={{ color: isClassical ? 'var(--text-muted)' : 'var(--accent-teal)' }}>...</span>;
     };
 
     return (
@@ -657,7 +658,7 @@ export const SimulationDashboard: React.FC<Props> = ({
                                 <button onClick={() => setPlayState(p => p === 'playing' ? 'paused' : 'playing')}>
                                     {playState === 'playing' ? '⏸ Pause' : '▶ Play'}
                                 </button>
-                                <button onClick={() => setSpeed(s => s === 1 ? 3 : s === 3 ? 10 : s === 10 ? 20 : s === 20 ? 50 : s === 50 ? 100 : 1)}>
+                                <button onClick={() => setSpeed(s => s === 1 ? 2 : s === 2 ? 5 : s === 5 ? 10 : s === 10 ? 50 : s === 50 ? 100 : 1)}>
                                     Speed: {speed}x
                                 </button>
                                 <button onClick={skipToEnd}>⏭ Skip to End</button>
@@ -674,10 +675,7 @@ export const SimulationDashboard: React.FC<Props> = ({
                             <div className="pane glass-panel no-ent-live-window" style={{ position: 'relative', display: 'flex', flexDirection: 'column', padding: '1.5rem', flex: 1 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                                     <h4 style={{ margin: 0, color: 'var(--text-muted)' }}>No Entanglement</h4>
-                                    <div style={{ fontSize: '0.9rem' }}>
-                                        <span style={{ marginRight: '1rem' }}>Rate: {round > 0 ? (noEntWins / round * 100).toFixed(2) : '0.00'}%</span>
-                                        <span>Wins: {noEntWins}</span>
-                                    </div>
+
                                 </div>
                                 {renderAnimationArea(noEntRoundData, false)}
                             </div>
@@ -693,8 +691,8 @@ export const SimulationDashboard: React.FC<Props> = ({
                                         <th title="Alice's Input">A</th>
                                         <th title="Bob's Input">B</th>
                                         <th>Target</th>
-                                        {mode === 'quantum' && compareClassical && <th>Entangled</th>}
-                                        <th>{mode === 'quantum' && compareClassical ? 'Classical' : 'Result'}</th>
+                                        {mode === 'quantum' && compareClassical && <th style={{ color: 'var(--quantum-pink)' }}>Entangled</th>}
+                                        <th style={mode === 'quantum' && compareClassical ? { color: 'var(--text-muted)' } : {}}>{mode === 'quantum' && compareClassical ? 'Classical' : 'Result'}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -703,28 +701,28 @@ export const SimulationDashboard: React.FC<Props> = ({
                                         <td>0</td>
                                         <td>A == B</td>
                                         {mode === 'quantum' && compareClassical && <td>{renderColResult(0, 0, roundData)}</td>}
-                                        <td>{renderColResult(0, 0, mode === 'quantum' && compareClassical ? noEntRoundData : roundData)}</td>
+                                        <td>{renderColResult(0, 0, mode === 'quantum' && compareClassical ? noEntRoundData : roundData, mode === 'quantum' && compareClassical)}</td>
                                     </tr>
                                     <tr className={getRowClass(0, 1)}>
                                         <td>0</td>
                                         <td>1</td>
                                         <td>A == B</td>
                                         {mode === 'quantum' && compareClassical && <td>{renderColResult(0, 1, roundData)}</td>}
-                                        <td>{renderColResult(0, 1, mode === 'quantum' && compareClassical ? noEntRoundData : roundData)}</td>
+                                        <td>{renderColResult(0, 1, mode === 'quantum' && compareClassical ? noEntRoundData : roundData, mode === 'quantum' && compareClassical)}</td>
                                     </tr>
                                     <tr className={getRowClass(1, 0)}>
                                         <td>1</td>
                                         <td>0</td>
                                         <td>A == B</td>
                                         {mode === 'quantum' && compareClassical && <td>{renderColResult(1, 0, roundData)}</td>}
-                                        <td>{renderColResult(1, 0, mode === 'quantum' && compareClassical ? noEntRoundData : roundData)}</td>
+                                        <td>{renderColResult(1, 0, mode === 'quantum' && compareClassical ? noEntRoundData : roundData, mode === 'quantum' && compareClassical)}</td>
                                     </tr>
                                     <tr className={getRowClass(1, 1)}>
                                         <td>1</td>
                                         <td>1</td>
                                         <td>A != B</td>
                                         {mode === 'quantum' && compareClassical && <td>{renderColResult(1, 1, roundData)}</td>}
-                                        <td>{renderColResult(1, 1, mode === 'quantum' && compareClassical ? noEntRoundData : roundData)}</td>
+                                        <td>{renderColResult(1, 1, mode === 'quantum' && compareClassical ? noEntRoundData : roundData, mode === 'quantum' && compareClassical)}</td>
                                     </tr>
                                 </tbody>
                             </table>

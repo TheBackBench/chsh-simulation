@@ -254,13 +254,13 @@ const ConditionBuilder: React.FC<{ condition: ConditionNode | null, onChange: (c
         if (condition.type === 'PROB_COND') {
             return (
                 <div style={{ display: 'inline-block' }}>
-                    <div className="block-condition">
+                    <div className="block-condition quantum-action">
                         <strong>Probability of</strong>
                         <ProbInput
                             value={condition.prob}
                             onChange={(val) => onChange({ ...condition, prob: val })}
                         /> %
-                        <button style={{ background: 'transparent', border: 'none', color: '#000', cursor: 'pointer', fontWeight: 'bold', marginLeft: '4px' }} onClick={() => onChange(null)}>✕</button>
+                        <button style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontWeight: 'bold', marginLeft: '4px' }} onClick={() => onChange(null)}>✕</button>
                     </div>
                 </div>
             );

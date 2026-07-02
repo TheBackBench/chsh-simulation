@@ -75,9 +75,10 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 1rem 0;
+    margin: 1rem auto;
     min-height: 320px;
-    width: 100%;
+    width: 700px;
+    max-width: 100%;
 }
 
 .computer-node {
@@ -144,8 +145,13 @@
 }
 
 @keyframes quantumPulse {
-    from { text-shadow: 0 0 10px var(--quantum-pink); }
-    to { text-shadow: 0 0 20px var(--quantum-pink), 0 0 30px white; }
+    from {
+        text-shadow: 0 0 10px var(--quantum-pink);
+    }
+
+    to {
+        text-shadow: 0 0 20px var(--quantum-pink), 0 0 30px white;
+    }
 }
 
 /* Flying Bits */
@@ -184,54 +190,109 @@
     animation: flyLeftTop var(--animation-duration, 0.8s) forwards;
     top: 50%;
 }
+
 .flying-to-bob {
     animation: flyLeftBottom var(--animation-duration, 0.8s) forwards;
     top: 50%;
 }
+
 .returning-from-alice {
     animation: flyRightTop var(--animation-duration, 0.8s) forwards;
     top: 50%;
 }
+
 .returning-from-bob {
     animation: flyRightBottom var(--animation-duration, 0.8s) forwards;
     top: 50%;
 }
 
 @keyframes flyLeftTop {
-    0% { transform: translate(300px, 150px); opacity: 0; }
-    20% { opacity: 1; }
-    80% { opacity: 1; }
-    100% { transform: translate(60px, 0); opacity: 0; }
+    0% {
+        transform: translate(480px, 150px);
+        opacity: 0;
+    }
+
+    20% {
+        opacity: 1;
+    }
+
+    80% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translate(60px, 0);
+        opacity: 0;
+    }
 }
 
 @keyframes flyLeftBottom {
-    0% { transform: translate(300px, -150px); opacity: 0; }
-    20% { opacity: 1; }
-    80% { opacity: 1; }
-    100% { transform: translate(60px, 0); opacity: 0; }
+    0% {
+        transform: translate(480px, -150px);
+        opacity: 0;
+    }
+
+    20% {
+        opacity: 1;
+    }
+
+    80% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translate(60px, 0);
+        opacity: 0;
+    }
 }
 
 @keyframes flyRightTop {
-    0% { transform: translate(60px, 0); opacity: 0; }
-    20% { opacity: 1; }
-    80% { opacity: 1; }
-    100% { transform: translate(300px, 150px); opacity: 0; }
+    0% {
+        transform: translate(60px, 0);
+        opacity: 0;
+    }
+
+    20% {
+        opacity: 1;
+    }
+
+    80% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translate(480px, 150px);
+        opacity: 0;
+    }
 }
 
 @keyframes flyRightBottom {
-    0% { transform: translate(60px, 0); opacity: 0; }
-    20% { opacity: 1; }
-    80% { opacity: 1; }
-    100% { transform: translate(300px, -150px); opacity: 0; }
+    0% {
+        transform: translate(60px, 0);
+        opacity: 0;
+    }
+
+    20% {
+        opacity: 1;
+    }
+
+    80% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translate(480px, -150px);
+        opacity: 0;
+    }
 }
 
 .round-result-label {
     position: absolute;
     font-size: 2rem;
     font-weight: bold;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    top: 20%;
+    right: 120px;
+    transform: translate(50%, -50%);
     animation: popIn calc(var(--animation-duration, 0.8s) * 0.375) cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
@@ -246,8 +307,15 @@
 }
 
 @keyframes popIn {
-    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
-    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    0% {
+        transform: translate(50%, -50%) scale(0.5);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translate(50%, -50%) scale(1);
+        opacity: 1;
+    }
 }
 
 /* Controls */
@@ -296,7 +364,8 @@
     overflow: hidden;
 }
 
-.rules-table th, .rules-table td {
+.rules-table th,
+.rules-table td {
     padding: 0.5rem;
     text-align: center;
     border: 1px solid var(--glass-border);
@@ -394,7 +463,7 @@
 /* Quantum Overlays */
 .quantum-overlay {
     position: absolute;
-    left: 110%;
+    left: 230px;
     top: 50%;
     transform: translateY(-50%);
     width: 165px;
@@ -440,8 +509,15 @@
 }
 
 @keyframes slideRightFade {
-    0% { transform: translate(-10px, -50%); opacity: 0; }
-    100% { transform: translate(0, -50%); opacity: 1; }
+    0% {
+        transform: translate(-10px, -50%);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translate(0, -50%);
+        opacity: 1;
+    }
 }
 
 /* No Entanglement Overrides */
@@ -522,12 +598,15 @@
         opacity: 0;
         filter: drop-shadow(0 0 1px var(--quantum-pink));
     }
+
     15% {
         opacity: 1;
     }
+
     85% {
         opacity: 1;
     }
+
     100% {
         stroke-dashoffset: 0;
         opacity: 0.1;

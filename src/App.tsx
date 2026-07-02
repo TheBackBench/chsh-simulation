@@ -12,7 +12,7 @@ import Tutorial from './components/Tutorial';
 
 function App() {
     const [mode, setMode] = useState<'how-to' | 'classical' | 'quantum' | 'theory'>('how-to');
-    const [nGames, setNGames] = useState(1000);
+    const [nGames, setNGames] = useState<number | ''>(1000);
     const [evaluationOrder, setEvaluationOrder] = useState<'alice' | 'bob' | 'random'>('random');
     const [isAnimating, setIsAnimating] = useState(false);
     const [showQuantumPopup, setShowQuantumPopup] = useState(false);
@@ -40,6 +40,9 @@ function App() {
 
     const handleRun = () => {
         if (mode === 'how-to') return;
+        if (nGames === '' || nGames < 1) {
+            setNGames(1);
+        }
         setIsAnimating(true);
     };
 
@@ -115,13 +118,11 @@ function App() {
                 </header>
 
                 <div className="main-layout" style={{ display: 'flex', flexDirection: 'column', gap: '2rem', alignItems: 'center', width: '100%' }}>
-                    {!isAnimating && <RulesSidebar />}
-
                     <div className="content-area" style={{ width: '100%' }}>
                         {isAnimating ? (
                             <SimulationDashboard
                                 mode={mode as 'classical' | 'quantum'}
-                                nGames={nGames}
+                                nGames={nGames === '' ? 1 : nGames}
                                 evaluationOrder={evaluationOrder}
                                 classicalStrategy={classicalStrategy}
                                 quantumStrategy={quantumStrategy}
@@ -157,6 +158,21 @@ function App() {
                         Math & Physics
                     </button>
                 </div>
+                
+                {mode === 'quantum' && !isAnimating && (
+                    <div className="sandbox-header" style={{ marginTop: '1rem' }}>
+                        <h2>Quantum Entanglement Strategy</h2>
+                        <p>Build a strategy for Alice and Bob using quantum measurement blocks. They share an entangled pair of particles.</p>
+                    </div>
+                )}
+                {mode === 'classical' && !isAnimating && (
+                    <div className="sandbox-header" style={{ marginTop: '1rem' }}>
+                        <h2>Non-Entangled Quantum Strategy</h2>
+                        <p>Build a strategy for Alice and Bob using interlocking logic blocks.</p>
+                    </div>
+                )}
+
+                {!isAnimating && (mode === 'classical' || mode === 'quantum') && <RulesSidebar />}
 
                 <main>
                     <HowToPlay isActive={mode === 'how-to'} />
@@ -174,10 +190,19 @@ function App() {
                                     id="num-games"
                                     value={nGames}
                                     onChange={(e) => {
+                                        if (e.target.value === '') {
+                                            setNGames('');
+                                            return;
+                                        }
                                         let val = parseInt(e.target.value);
-                                        if (isNaN(val)) val = 100;
+                                        if (isNaN(val)) return;
                                         if (val > 1000000) val = 1000000;
                                         setNGames(val);
+                                    }}
+                                    onBlur={() => {
+                                        if (nGames === '' || nGames < 1) {
+                                            setNGames(1);
+                                        }
                                     }}
                                     min="100" max="1000000" step="100"
                                 />

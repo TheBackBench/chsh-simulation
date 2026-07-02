@@ -205,9 +205,9 @@ header {
 
 .sandbox-header {
     text-align: center;
-    margin-bottom: 2rem;
-    padding-left: 220px;
-    padding-right: 220px;
+    margin: 0 auto 2rem;
+    max-width: 900px;
+    padding: 0 2rem;
 }
 
 .sandbox-header h2 {

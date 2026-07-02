@@ -13,7 +13,7 @@ const DraggableBlock: React.FC<{ type: string, label: string, className: string,
         <div className={title ? 'has-tooltip' : ''} data-tooltip={title} style={{ display: 'inline-block', margin: '4px' }}>
             <div
                 className={`block ${className}`}
-                style={{ cursor: 'grab', fontSize: '0.9rem' }}
+                style={{ cursor: 'grab', fontSize: '0.9rem', width: '150px', textAlign: 'center', justifyContent: 'center' }}
                 draggable
                 onDragStart={(e) => {
                     e.dataTransfer.setData('blockType', type);
@@ -47,20 +47,16 @@ export const ClassicalSandbox: React.FC<Props> = ({ strategy, setStrategy, isAct
 
     return (
         <section id="classical-sandbox" className="sandbox active">
-            <div className="sandbox-header">
-                <h2>Local Hidden-Variable Strategy</h2>
-                <p>Build a strategy for Alice and Bob using interlocking logic blocks.</p>
-            </div>
 
             <div className="palette glass-panel" style={{ padding: '1.25rem', marginBottom: '2rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                     <div style={{ flex: 1 }}></div>
-                    <h3 style={{ margin: 0, textAlign: 'center', flex: 1 }}>Block Palette</h3>
+                    <h3 style={{ margin: 0, textAlign: 'center', flex: 1 }}>Block Bank</h3>
                     <div style={{ flex: 1, textAlign: 'right' }}>
                         <button 
                             className="secondary-btn" 
                             onClick={loadOptimal} 
-                            title="Automatically build the optimal strategy that achieves the maximum possible success rate."
+                            title={`Builds the optimal strategy that achieves\nthe maximum possible success rate`}
                             style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}
                         >
                             Build Optimal Strategy
@@ -83,10 +79,14 @@ export const ClassicalSandbox: React.FC<Props> = ({ strategy, setStrategy, isAct
                     
                     <div className="palette-sub-area" style={{ flex: 1, minWidth: '240px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '8px', padding: '1rem' }}>
                         <h4 style={{ margin: '0 0 0.75rem 0', color: 'var(--accent-teal)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem', textAlign: 'center' }}>Condition Blocks</h4>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
-                            <DraggableBlock type="RECEIVED_1" label="Received 1" className="block-condition" title="Checks if received bit is 1" />
-                            <DraggableBlock type="RECEIVED_0" label="Received 0" className="block-condition" title="Checks if received bit is 0" />
-                            <DraggableBlock type="PROB_COND" label="Probability of _%" className="block-condition" title="Evaluates to True with specified probability" />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                                <DraggableBlock type="PROB_COND" label="Probability" className="block-condition quantum-action" title="Evaluates to True with specified probability" />
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                                <DraggableBlock type="RECEIVED_1" label="Received 1" className="block-condition" title="Checks if received bit is 1" />
+                                <DraggableBlock type="RECEIVED_0" label="Received 0" className="block-condition" title="Checks if received bit is 0" />
+                            </div>
                         </div>
                     </div>
                 </div>
