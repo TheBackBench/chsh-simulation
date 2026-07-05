@@ -77,7 +77,7 @@
     align-items: center;
     margin: 1rem auto;
     min-height: 320px;
-    width: 700px;
+    width: 900px;
     max-width: 100%;
 }
 
@@ -88,11 +88,15 @@
     transform: translateY(-50%);
     background: rgba(0, 0, 0, 0.5);
     border: 2px solid var(--glass-border);
-    padding: 1rem;
     border-radius: 8px;
     font-weight: bold;
     font-size: 1.2rem;
     transition: all 0.2s;
+    width: 150px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .computer-node.active {
@@ -113,11 +117,15 @@
 .player-node {
     background: rgba(0, 0, 0, 0.5);
     border: 2px solid var(--glass-border);
-    padding: 1rem;
     border-radius: 8px;
     font-weight: bold;
     font-size: 1.2rem;
     position: relative;
+    width: 120px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .quantum-link {
@@ -187,91 +195,96 @@
     transform: translateX(-50%);
 }
 
-.flying-to-alice {
-    animation: flyLeftTop var(--animation-duration, 0.8s) forwards;
-    top: -30px;
-    left: 50%;
+.abs-flying-to-alice, .abs-flying-to-bob, .abs-returning-from-alice, .abs-returning-from-bob {
+    position: absolute;
+    z-index: 999;
 }
 
-.flying-to-bob {
-    animation: flyLeftBottom var(--animation-duration, 0.8s) forwards;
-    top: -30px;
-    left: 50%;
+.abs-flying-to-alice {
+    animation: absFlyAlice var(--animation-duration, 0.8s) forwards;
 }
 
-.returning-from-alice {
-    animation: flyRightTop var(--animation-duration, 0.8s) forwards;
-    top: -30px;
-    left: 50%;
+.abs-flying-to-bob {
+    animation: absFlyBob var(--animation-duration, 0.8s) forwards;
 }
 
-.returning-from-bob {
-    animation: flyRightBottom var(--animation-duration, 0.8s) forwards;
-    top: -30px;
-    left: 50%;
+.abs-returning-from-alice {
+    animation: absReturnAlice var(--animation-duration, 0.8s) forwards;
 }
 
-@keyframes flyLeftTop {
+.abs-returning-from-bob {
+    animation: absReturnBob var(--animation-duration, 0.8s) forwards;
+}
+
+@keyframes absFlyAlice {
     0% {
-        transform: translate(500px, 100px) translateX(-50%);
+        left: calc(100% - 115px);
+        top: 50%;
         opacity: 0;
+        transform: translate(-50%, -50%);
     }
-
     10% {
         opacity: 1;
     }
-
     100% {
-        transform: translate(0, 0) translateX(-50%);
+        left: 100px;
+        top: calc(16.666% - 48px);
         opacity: 1;
+        transform: translate(-50%, -50%);
     }
 }
 
-@keyframes flyLeftBottom {
+@keyframes absFlyBob {
     0% {
-        transform: translate(500px, -100px) translateX(-50%);
+        left: calc(100% - 115px);
+        top: 50%;
         opacity: 0;
+        transform: translate(-50%, -50%);
     }
-
     10% {
         opacity: 1;
     }
-
     100% {
-        transform: translate(0, 0) translateX(-50%);
+        left: 100px;
+        top: calc(83.333% - 48px);
         opacity: 1;
+        transform: translate(-50%, -50%);
     }
 }
 
-@keyframes flyRightTop {
+@keyframes absReturnAlice {
     0% {
-        transform: translate(0, 0) translateX(-50%);
+        left: 100px;
+        top: calc(16.666% - 48px);
         opacity: 1;
+        transform: translate(-50%, -50%);
     }
-
     90% {
         opacity: 1;
     }
-
     100% {
-        transform: translate(500px, 100px) translateX(-50%);
+        left: calc(100% - 130px);
+        top: calc(50% - 48px);
         opacity: 0;
+        transform: translate(-50%, -50%);
     }
 }
 
-@keyframes flyRightBottom {
+@keyframes absReturnBob {
     0% {
-        transform: translate(0, 0) translateX(-50%);
+        left: 100px;
+        top: calc(83.333% - 48px);
         opacity: 1;
+        transform: translate(-50%, -50%);
     }
-
     90% {
         opacity: 1;
     }
-
     100% {
-        transform: translate(500px, -100px) translateX(-50%);
+        left: calc(100% - 100px);
+        top: calc(50% - 48px);
         opacity: 0;
+        transform: translate(-50%, -50%);
     }
 }
 
@@ -456,6 +469,10 @@
     top: 50%;
     transform: translateY(-50%);
     width: 165px;
+    height: 190px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     background: rgba(11, 15, 25, 0.95);
     border: 1px solid var(--glass-border);
     border-radius: 8px;

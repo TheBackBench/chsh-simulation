@@ -167,7 +167,7 @@ function App() {
                 )}
                 {mode === 'classical' && !isAnimating && (
                     <div className="sandbox-header" style={{ marginTop: '1rem' }}>
-                        <h2>Non-Entangled Quantum Strategy</h2>
+                        <h2>Classical Strategy</h2>
                         <p>Build a strategy for Alice and Bob using interlocking logic blocks.</p>
                     </div>
                 )}
@@ -230,7 +230,7 @@ function App() {
                                             onChange={(e) => setCompareClassical(e.target.checked)}
                                             style={{ marginRight: '8px', cursor: 'pointer' }}
                                         />
-                                        Compare to Classical (No Entanglement)
+                                        Compare to Hidden Variable
                                     </label>
                                 </div>
                             )}
