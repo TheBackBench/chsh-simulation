@@ -15,6 +15,7 @@ interface Props {
 type PlayState = 'playing' | 'paused' | 'finished' | 'pause-requested';
 type RoundStage =
     | 'ready'
+    | 'generating-pair'
     | 'sending'
     | 'q-measure-1-pending'
     | 'q-measure-1-result'
@@ -48,7 +49,7 @@ export const SimulationDashboard: React.FC<Props> = ({
     const playStateRef = useRef(playState);
     playStateRef.current = playState;
 
-    const baseDelay = 1600 / speed;
+    const baseDelay = 2500 / speed;
 
     const [showTheoreticalOptimum, setShowTheoreticalOptimum] = useState(false);
     const [showNoEntTheoreticalOptimum, setShowNoEntTheoreticalOptimum] = useState(false);
@@ -133,10 +134,17 @@ export const SimulationDashboard: React.FC<Props> = ({
             }
 
             const details = data.quantumDetails;
-            const startStage = currentStage === 'ready' ? 'sending' : currentStage;
+            const startStage = currentStage === 'ready' ? 'generating-pair' : currentStage;
+
+            // Generating Pair Stage
+            if (startStage === 'generating-pair') {
+                setCurrentStage('generating-pair');
+                await new Promise(r => setTimeout(r, baseDelay));
+                if (isCancelled || playStateRef.current !== 'playing') return;
+            }
 
             // Sending Stage
-            if (startStage === 'sending') {
+            if (['generating-pair', 'sending'].includes(startStage)) {
                 setCurrentStage('sending');
                 await new Promise(r => setTimeout(r, baseDelay));
                 if (isCancelled || playStateRef.current !== 'playing') return;
@@ -145,13 +153,13 @@ export const SimulationDashboard: React.FC<Props> = ({
             // Quantum Measurement Stages
             if (mode === 'quantum' && data.quantumMeasured && details) {
                 if (details.firstMeasured) {
-                    if (['sending', 'q-measure-1-pending'].includes(startStage)) {
+                    if (['generating-pair', 'sending', 'q-measure-1-pending'].includes(startStage)) {
                         setCurrentStage('q-measure-1-pending');
                         await new Promise(r => setTimeout(r, baseDelay));
                         if (isCancelled || playStateRef.current !== 'playing') return;
                     }
 
-                    if (['sending', 'q-measure-1-pending', 'q-measure-1-result'].includes(startStage)) {
+                    if (['generating-pair', 'sending', 'q-measure-1-pending', 'q-measure-1-result'].includes(startStage)) {
                         setCurrentStage('q-measure-1-result');
                         await new Promise(r => setTimeout(r, baseDelay));
                         if (isCancelled || playStateRef.current !== 'playing') return;
@@ -159,13 +167,13 @@ export const SimulationDashboard: React.FC<Props> = ({
                 }
 
                 if (details.secondMeasured) {
-                    if (['sending', 'q-measure-1-pending', 'q-measure-1-result', 'q-measure-2-pending'].includes(startStage)) {
+                    if (['generating-pair', 'sending', 'q-measure-1-pending', 'q-measure-1-result', 'q-measure-2-pending'].includes(startStage)) {
                         setCurrentStage('q-measure-2-pending');
                         await new Promise(r => setTimeout(r, baseDelay));
                         if (isCancelled || playStateRef.current !== 'playing') return;
                     }
 
-                    if (['sending', 'q-measure-1-pending', 'q-measure-1-result', 'q-measure-2-pending', 'q-measure-2-result'].includes(startStage)) {
+                    if (['generating-pair', 'sending', 'q-measure-1-pending', 'q-measure-1-result', 'q-measure-2-pending', 'q-measure-2-result'].includes(startStage)) {
                         setCurrentStage('q-measure-2-result');
                         await new Promise(r => setTimeout(r, baseDelay));
                         if (isCancelled || playStateRef.current !== 'playing') return;
@@ -174,14 +182,14 @@ export const SimulationDashboard: React.FC<Props> = ({
             }
 
             // Returning Stage
-            if (['sending', 'q-measure-1-pending', 'q-measure-1-result', 'q-measure-2-pending', 'q-measure-2-result', 'returning'].includes(startStage)) {
+            if (['generating-pair', 'sending', 'q-measure-1-pending', 'q-measure-1-result', 'q-measure-2-pending', 'q-measure-2-result', 'returning'].includes(startStage)) {
                 setCurrentStage('returning');
                 await new Promise(r => setTimeout(r, baseDelay));
                 if (isCancelled || playStateRef.current !== 'playing') return;
             }
 
             // Result Stage
-            if (['sending', 'q-measure-1-pending', 'q-measure-1-result', 'q-measure-2-pending', 'q-measure-2-result', 'returning'].includes(startStage)) {
+            if (['generating-pair', 'sending', 'q-measure-1-pending', 'q-measure-1-result', 'q-measure-2-pending', 'q-measure-2-result', 'returning'].includes(startStage)) {
                 setCurrentStage('result');
                 const newWins = wins + (data.win ? 1 : 0);
 
@@ -394,17 +402,42 @@ export const SimulationDashboard: React.FC<Props> = ({
         isPending: boolean,
         showResult: boolean,
         resultUp: boolean,
-        collapsedState?: { angle: number; resultUp: boolean }
+        collapsedState?: { angle: number; resultUp: boolean },
+        hiddenVar?: number,
+        isAlice?: boolean
     ) => {
         const rad = (angle * Math.PI) / 180;
         const labelX = 36 * Math.cos(rad);
         const labelY = -36 * Math.sin(rad);
 
+        let upArc = null;
+        let downArc = null;
+        let hiddenAxis = null;
+        if (hiddenVar !== undefined && isAlice !== undefined) {
+            const h = isAlice ? hiddenVar : hiddenVar + 180;
+            const r = 24;
+            const startRad = (h - 90) * Math.PI / 180;
+            const endRad = (h + 90) * Math.PI / 180;
+            const p1 = { x: r * Math.cos(startRad), y: -r * Math.sin(startRad) };
+            const p2 = { x: r * Math.cos(endRad), y: -r * Math.sin(endRad) };
+
+            upArc = <path d={`M ${p1.x},${p1.y} A ${r},${r} 0 0,0 ${p2.x},${p2.y} Z`} fill="rgba(0, 255, 159, 0.15)" stroke="rgba(0, 255, 159, 0.3)" strokeDasharray="2 2" />;
+            downArc = <path d={`M ${p2.x},${p2.y} A ${r},${r} 0 0,0 ${p1.x},${p1.y} Z`} fill="rgba(255, 68, 68, 0.15)" stroke="rgba(255, 68, 68, 0.3)" strokeDasharray="2 2" />;
+
+            const hRad = h * Math.PI / 180;
+            const hx = r * Math.cos(hRad);
+            const hy = -r * Math.sin(hRad);
+            hiddenAxis = <line x1="0" y1="0" x2={hx} y2={hy} stroke="rgba(255, 255, 255, 0.4)" strokeWidth="1.5" strokeDasharray="2 2" />;
+        }
+
         return (
             <svg width="100" height="100" viewBox="-50 -50 100 100" className="unit-circle-svg">
+                {upArc}
+                {downArc}
                 <circle cx="0" cy="0" r="24" className="circle-outline" />
                 <line x1="-28" y1="0" x2="28" y2="0" className="axis-faint" />
                 <line x1="0" y1="-28" x2="0" y2="28" className="axis-faint" />
+                {hiddenAxis}
                 <text x={labelX} y={labelY} className="compass-label" textAnchor="middle" dominantBaseline="middle">Up</text>
 
                 {collapsedState && (
@@ -442,8 +475,10 @@ export const SimulationDashboard: React.FC<Props> = ({
             if (currentStage === 'q-measure-1-pending') {
                 return (
                     <div className={`quantum-overlay pending ${!isEntangled ? 'no-ent-overlay' : ''}`}>
-                        {renderUnitCircle(details.firstAngle, true, false, false)}
-                        <div className="quantum-prob">50% ↑ / 50% ↓</div>
+                        {renderUnitCircle(details.firstAngle, true, false, false, undefined, !isEntangled ? details.hiddenVar : undefined, player === 'alice')}
+                        <div className="quantum-prob">
+                            {isEntangled ? '50% ↑ / 50% ↓' : 'Deterministic (LHV)'}
+                        </div>
                         <div className="quantum-status-text">Measuring spin ({details.firstAngle.toFixed(0)}°)...</div>
                     </div>
                 );
@@ -458,7 +493,7 @@ export const SimulationDashboard: React.FC<Props> = ({
             if (showResult) {
                 return (
                     <div className={`quantum-overlay measured ${!isEntangled ? 'no-ent-overlay' : ''}`}>
-                        {renderUnitCircle(details.firstAngle, false, true, details.firstResult)}
+                        {renderUnitCircle(details.firstAngle, false, true, details.firstResult, undefined, !isEntangled ? details.hiddenVar : undefined, player === 'alice')}
                         <div className="quantum-spin-result">{details.firstResult ? '↑ (Up)' : '↓ (Down)'}</div>
                         <div className="quantum-status-text">Spin measured at {details.firstAngle.toFixed(0)}°</div>
                     </div>
@@ -472,11 +507,15 @@ export const SimulationDashboard: React.FC<Props> = ({
             const collapsedState = (isEntangled && firstResultMeasured) ? { angle: details.firstAngle, resultUp: details.firstResult } : undefined;
 
             if (currentStage === 'q-measure-2-pending') {
-                const { pctUp, pctDown } = isEntangled ? getSecondMeasurementProbs(details) : { pctUp: 50, pctDown: 50 };
+                const angleDiff = Math.abs((details.firstAngle - details.secondAngle) % 360);
+                const normAngleDiff = angleDiff > 180 ? 360 - angleDiff : angleDiff;
+
+                const pSame = Math.pow(Math.cos(normAngleDiff * Math.PI / 180), 2);
+                const linearProbSame = 1 - (normAngleDiff / 180);
+
                 return (
                     <div className={`quantum-overlay pending ${!isEntangled ? 'no-ent-overlay' : ''}`}>
-                        {renderUnitCircle(details.secondAngle, true, false, false, collapsedState)}
-                        <div className="quantum-prob">{pctUp}% ↑ / {pctDown}% ↓</div>
+                        {renderUnitCircle(details.secondAngle, true, false, false, collapsedState, !isEntangled ? details.hiddenVar : undefined, player === 'alice')}
                         <div className="quantum-status-text">Measuring spin ({details.secondAngle.toFixed(0)}°)...</div>
                     </div>
                 );
@@ -489,7 +528,7 @@ export const SimulationDashboard: React.FC<Props> = ({
             if (showResult) {
                 return (
                     <div className={`quantum-overlay measured ${!isEntangled ? 'no-ent-overlay' : ''}`}>
-                        {renderUnitCircle(details.secondAngle, false, true, details.secondResult, collapsedState)}
+                        {renderUnitCircle(details.secondAngle, false, true, details.secondResult, collapsedState, !isEntangled ? details.hiddenVar : undefined, player === 'alice')}
                         <div className="quantum-spin-result">{details.secondResult ? '↑ (Up)' : '↓ (Down)'}</div>
                         <div className="quantum-status-text">Spin measured at {details.secondAngle.toFixed(0)}°</div>
                     </div>
@@ -500,61 +539,162 @@ export const SimulationDashboard: React.FC<Props> = ({
         return null;
     };
 
-    const renderAnimationArea = (data: RoundResult | null, isEntangled: boolean) => (
-        <div className="animation-area">
-            <div className={`computer-node ${currentStage !== 'ready' ? 'active' : ''}`}>
-                💻 Computer
-                {data && currentStage === 'result' && (
-                    <>
-                        <div className="bit static-on-computer-top">{data.outA ? 1 : 0}</div>
-                        <div className="bit static-on-computer-bottom">{data.outB ? 1 : 0}</div>
-                    </>
-                )}
-            </div>
+    const renderAnimationArea = (data: RoundResult | null, isEntangled: boolean) => {
+        let mathText: React.ReactNode = <span style={{ color: 'var(--text-muted)' }}>Waiting for round to begin...</span>;
 
-            <div className="players">
-                <div className="player-node alice">
-                    👩 Alice
-                    {data && currentStage === 'sending' && (
-                        <div className="bit flying-to-alice">{data.x}</div>
-                    )}
-                    {data && currentStage !== 'sending' && currentStage !== 'ready' && (
-                        <div className="bit static-on-alice">{data.x}</div>
-                    )}
-                    {data && currentStage === 'returning' && (
-                        <div className="bit returning-from-alice">{data.outA ? 1 : 0}</div>
-                    )}
-                    {renderQuantumOverlay('alice', data, isEntangled)}
-                </div>
+        if (data?.quantumDetails) {
+            const details = data.quantumDetails;
+            const firstPlayerName = details.firstMeasured === 'alice' ? 'Alice' : (details.firstMeasured === 'bob' ? 'Bob' : null);
+            const secondPlayerName = details.secondMeasured === 'alice' ? 'Alice' : (details.secondMeasured === 'bob' ? 'Bob' : null);
 
-                {mode === 'quantum' && (
-                    <div className={`quantum-link ${!isEntangled ? 'no-ent' : ''} ${data?.quantumMeasured && currentStage !== 'ready' && currentStage !== 'result' ? 'measured' : ''}`}>
-                        {isEntangled ? '〰〰 Entanglement 〰〰' : '〰〰 No Entanglement 〰〰'}
+            if (['generating-pair', 'sending'].includes(currentStage)) {
+                if (!data.quantumMeasured) {
+                    mathText = "Pair generated, traveling to players...";
+                } else {
+                    mathText = "Pair generated, traveling to measuring stations...";
+                }
+            } else if (currentStage === 'q-measure-1-pending' && firstPlayerName) {
+                mathText = `${firstPlayerName} is measuring at ${details.firstAngle.toFixed(0)}°. Waiting for outcome...`;
+            } else if (currentStage === 'q-measure-1-result' && firstPlayerName) {
+                const resStr = details.firstResult ? 'Up' : 'Down';
+                mathText = `${firstPlayerName} measured ${resStr} at ${details.firstAngle.toFixed(0)}°.`;
+            } else if (['q-measure-2-pending', 'q-measure-2-result', 'returning', 'result'].includes(currentStage)) {
+                if (firstPlayerName && secondPlayerName) {
+                    const angleDiff = Math.abs((details.firstAngle - details.secondAngle) % 360);
+                    const normAngleDiff = angleDiff > 180 ? 360 - angleDiff : angleDiff;
+                    const pSame = Math.pow(Math.cos(normAngleDiff * Math.PI / 180), 2);
+                    const linearProbSame = 1 - (normAngleDiff / 180);
+
+                    const resStr = details.firstResult ? 'Up' : 'Down';
+                    const X = details.firstAngle.toFixed(0);
+                    const Z = details.secondAngle.toFixed(0);
+
+                    const secondPlayerHiddenVar = details.hiddenVar !== undefined
+                        ? (details.secondMeasured === 'alice' ? details.hiddenVar : details.hiddenVar + 180) % 360
+                        : 0;
+                    const Y = secondPlayerHiddenVar.toFixed(0);
+                    const symb = resStr === 'Up' ? '↑' : '↓';
+
+                    if (isEntangled) {
+                        mathText = (
+                            <p style={{ margin: 0 }}>
+                                {firstPlayerName} measured <strong>{resStr}</strong> at <strong>{X}°</strong>. The entangled state instantly collapsed to <strong>{resStr}</strong> at <strong>{X}°</strong> for {secondPlayerName}. Therefore, the probability of {secondPlayerName}'s measurement at <strong>{Z}°</strong> resulting in <strong>{resStr}</strong> is:<br />
+                                <strong style={{ color: 'var(--quantum-pink)', display: 'block', marginTop: '0.5rem', fontSize: '1rem' }}>|⟨{symb}_{X}° | {symb}_{Z}°⟩|² = cos²(|{Z}° - {X}°|) = {Math.round(pSame * 100)}%</strong>
+                            </p>
+                        );
+                    } else {
+                        mathText = (
+                            <p style={{ margin: 0 }}>
+                                {firstPlayerName} measured <strong>{resStr}</strong> at <strong>{X}°</strong>. The Hidden Variable for {secondPlayerName} is Up at <strong>{Y}°</strong>. Therefore, the theoretical probability of {secondPlayerName}'s measurement at <strong>{Z}°</strong> resulting in <strong>{resStr}</strong> is:<br />
+                                <strong style={{ color: '#fff', display: 'block', marginTop: '0.5rem', fontSize: '1rem' }}>Linear Overlap / 180° = 1 - |{Z}° - {X}°|/180° = {Math.round(linearProbSame * 100)}%</strong>
+                            </p>
+                        );
+                    }
+                } else if (firstPlayerName) {
+                    const resStr = details.firstResult ? 'Up' : 'Down';
+                    mathText = `${firstPlayerName} measured ${resStr} at ${details.firstAngle.toFixed(0)}°. The other player did not measure the quantum state.`;
+                } else {
+                    mathText = "Neither player measured the quantum state.";
+                }
+            }
+        }
+
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <div className="animation-area" style={{ flex: 1 }}>
+                    <div className={`computer-node ${currentStage !== 'ready' ? 'active' : ''}`}>
+                        💻 Computer
+                        {data && currentStage === 'result' && (
+                            <>
+                                <div className="bit static-on-computer-left">{data.outA ? 1 : 0}</div>
+                                <div className="bit static-on-computer-right">{data.outB ? 1 : 0}</div>
+                            </>
+                        )}
                     </div>
-                )}
 
-                <div className="player-node bob">
-                    👨 Bob
-                    {data && currentStage === 'sending' && (
-                        <div className="bit flying-to-bob">{data.y}</div>
+                    {!isEntangled && data && currentStage !== 'ready' && data.quantumDetails && (
+                        <div className="hidden-var-subwindow glass-panel" style={{ position: 'absolute', right: '40px', bottom: '20px', padding: '0.75rem', display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 10, background: 'rgba(11, 15, 25, 0.95)', border: '1px solid var(--glass-border)', borderRadius: '8px', boxShadow: '0 4px 15px rgba(0, 0, 0, 0.6)' }}>
+                            <div style={{ marginBottom: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>
+                                Hidden Variables
+                            </div>
+                            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <svg width="40" height="40" viewBox="-50 -50 100 100" style={{ overflow: 'visible' }}>
+                                        <circle cx="0" cy="0" r="40" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
+                                        <g className="spinning-hidden-var" style={{ '--target-angle': `${-(data.quantumDetails.hiddenVar || 0)}deg` } as React.CSSProperties}>
+                                            <path d="M 0,-40 A 40,40 0 0,1 0,40 Z" fill="rgba(0, 255, 159, 0.15)" stroke="rgba(0, 255, 159, 0.3)" strokeDasharray="2 2" />
+                                            <path d="M 0,40 A 40,40 0 0,1 0,-40 Z" fill="rgba(255, 68, 68, 0.15)" stroke="rgba(255, 68, 68, 0.3)" strokeDasharray="2 2" />
+                                            <line x1="-40" y1="0" x2="35" y2="0" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="1.5" strokeDasharray="2 2" />
+                                            <polygon points="35,-5 45,0 35,5" fill="#fff" />
+                                        </g>
+                                    </svg>
+                                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Alice</div>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <svg width="40" height="40" viewBox="-50 -50 100 100" style={{ overflow: 'visible' }}>
+                                        <circle cx="0" cy="0" r="40" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
+                                        <g className="spinning-hidden-var" style={{ '--target-angle': `${-((data.quantumDetails.hiddenVar || 0) + 180)}deg` } as React.CSSProperties}>
+                                            <path d="M 0,-40 A 40,40 0 0,1 0,40 Z" fill="rgba(0, 255, 159, 0.15)" stroke="rgba(0, 255, 159, 0.3)" strokeDasharray="2 2" />
+                                            <path d="M 0,40 A 40,40 0 0,1 0,-40 Z" fill="rgba(255, 68, 68, 0.15)" stroke="rgba(255, 68, 68, 0.3)" strokeDasharray="2 2" />
+                                            <line x1="-40" y1="0" x2="35" y2="0" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="1.5" strokeDasharray="2 2" />
+                                            <polygon points="35,-5 45,0 35,5" fill="#fff" />
+                                        </g>
+                                    </svg>
+                                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Bob</div>
+                                </div>
+                            </div>
+                        </div>
                     )}
-                    {data && currentStage !== 'sending' && currentStage !== 'ready' && (
-                        <div className="bit static-on-bob">{data.y}</div>
+
+                    <div className="players">
+                        <div className="player-node alice">
+                            👩 Alice
+                            {data && currentStage === 'sending' && (
+                                <div className="bit flying-to-alice">{data.x}</div>
+                            )}
+                            {data && currentStage !== 'sending' && currentStage !== 'ready' && (
+                                <div className="bit static-on-alice">{data.x}</div>
+                            )}
+                            {data && currentStage === 'returning' && (
+                                <div className="bit returning-from-alice">{data.outA ? 1 : 0}</div>
+                            )}
+                            {renderQuantumOverlay('alice', data, isEntangled)}
+                        </div>
+
+                        {mode === 'quantum' && (
+                            <div className={`quantum-link ${!isEntangled ? 'no-ent' : ''} ${data?.quantumMeasured && currentStage !== 'ready' && currentStage !== 'result' ? 'measured' : ''}`}>
+                                {isEntangled ? '〰〰 Entanglement 〰〰' : '〰〰 No Entanglement 〰〰'}
+                            </div>
+                        )}
+
+                        <div className="player-node bob">
+                            👨 Bob
+                            {data && currentStage === 'sending' && (
+                                <div className="bit flying-to-bob">{data.y}</div>
+                            )}
+                            {data && currentStage !== 'sending' && currentStage !== 'ready' && (
+                                <div className="bit static-on-bob">{data.y}</div>
+                            )}
+                            {data && currentStage === 'returning' && (
+                                <div className="bit returning-from-bob">{data.outB ? 1 : 0}</div>
+                            )}
+                            {renderQuantumOverlay('bob', data, isEntangled)}
+                        </div>
+                    </div>
+
+                    {currentStage === 'result' && data && (
+                        <div className={`round-result-label ${data.win ? 'win' : 'loss'}`}>
+                            {data.win ? 'SUCCESS!' : 'FAILURE'}
+                        </div>
                     )}
-                    {data && currentStage === 'returning' && (
-                        <div className="bit returning-from-bob">{data.outB ? 1 : 0}</div>
-                    )}
-                    {renderQuantumOverlay('bob', data, isEntangled)}
+                </div>
+
+                <div className="math-panel" style={{ height: '120px', marginTop: '1rem', padding: '1rem', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', fontSize: '0.9rem', color: '#e0e0e0', border: `1px solid ${isEntangled ? 'var(--quantum-pink)' : '#666'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+                    {mathText}
                 </div>
             </div>
-
-            {currentStage === 'result' && data && (
-                <div className={`round-result-label ${data.win ? 'win' : 'loss'}`}>
-                    {data.win ? 'SUCCESS!' : 'FAILURE'}
-                </div>
-            )}
-        </div>
-    );
+        );
+    };
 
     const renderColResult = (rowX: number, rowY: number, data: RoundResult | null, isClassical: boolean = false) => {
         if (!data || data.x !== rowX || data.y !== rowY) return <span style={{ color: 'var(--text-muted)' }}>-</span>;
@@ -668,16 +808,19 @@ export const SimulationDashboard: React.FC<Props> = ({
                         <div className="pane glass-panel" style={{ position: 'relative', display: 'flex', flexDirection: 'column', padding: '1.5rem', flex: 1 }}>
                             {mode === 'quantum' && <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--quantum-pink)' }}>True Quantum (Entangled)</h3>}
 
-                            {renderAnimationArea(roundData, true)}
+                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                {renderAnimationArea(roundData, true)}
+                            </div>
                         </div>
 
                         {mode === 'quantum' && compareClassical && (
                             <div className="pane glass-panel no-ent-live-window" style={{ position: 'relative', display: 'flex', flexDirection: 'column', padding: '1.5rem', flex: 1 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                                     <h4 style={{ margin: 0, color: 'var(--text-muted)' }}>No Entanglement</h4>
-
                                 </div>
-                                {renderAnimationArea(noEntRoundData, false)}
+                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    {renderAnimationArea(noEntRoundData, false)}
+                                </div>
                             </div>
                         )}
                     </div>

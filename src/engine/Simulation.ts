@@ -66,19 +66,39 @@ export class EntangledPair {
     }
 }
 
-export class DummyPair extends EntangledPair {
+export class LHVPair extends EntangledPair {
+    hiddenVar: number;
+
+    constructor() {
+        super();
+        this.hiddenVar = Math.random() * 2 * Math.PI;
+    }
+
     measure(player: 'alice'|'bob', angleRad: number): boolean {
+        const normalize = (a: number) => {
+            let res = a % (2 * Math.PI);
+            if (res < 0) res += 2 * Math.PI;
+            return res;
+        };
+
+        const angle = normalize(angleRad);
+        const particleHiddenVar = player === 'alice' ? this.hiddenVar : normalize(this.hiddenVar + Math.PI);
+
+        let diff = Math.abs(angle - particleHiddenVar);
+        if (diff > Math.PI) diff = 2 * Math.PI - diff;
+
+        const result = diff <= Math.PI / 2;
+
         if (!this.firstMeasured) {
             this.firstMeasured = player;
             this.firstAngle = angleRad;
-            this.firstResult = Math.random() < 0.5;
-            return this.firstResult;
+            this.firstResult = result;
         } else {
             this.secondMeasured = player;
             this.secondAngle = angleRad;
-            this.secondResult = Math.random() < 0.5; // Always 50/50, NO ENTANGLEMENT
-            return this.secondResult;
+            this.secondResult = result;
         }
+        return result;
     }
 }
 
@@ -143,6 +163,7 @@ export interface RoundResult {
         secondMeasured: 'alice' | 'bob' | null;
         secondAngle: number;
         secondResult: boolean;
+        hiddenVar?: number;
     };
 }
 
@@ -175,7 +196,7 @@ export function playSingleRound(
         }
     } else {
         if (simulateNoEntanglement) {
-            pair = new DummyPair();
+            pair = new LHVPair();
             if (isAliceFirst) {
                 outA = evaluateAST(quantumStrategy.alice, x, quantumStrategy.aliceDefault, pair, 'alice');
                 outB = evaluateAST(quantumStrategy.bob, y, quantumStrategy.bobDefault, pair, 'bob');
@@ -206,7 +227,8 @@ export function playSingleRound(
             firstResult: pair.firstResult,
             secondMeasured: pair.secondMeasured,
             secondAngle: pair.secondMeasured ? pair.secondAngle * (180 / Math.PI) : 0,
-            secondResult: pair.secondResult
+            secondResult: pair.secondResult,
+            hiddenVar: pair instanceof LHVPair ? pair.hiddenVar * (180 / Math.PI) : undefined
         };
     }
     return result;
