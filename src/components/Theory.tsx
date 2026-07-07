@@ -1,4 +1,5 @@
 import React from 'react';
+import { InteractiveComparison } from './InteractiveComparison';
 
 interface Props {
     isActive: boolean;
@@ -206,6 +207,13 @@ export const Theory: React.FC<Props> = ({ isActive }) => {
                     <p style={{ marginTop: '1.5rem', fontStyle: 'italic', color: 'var(--text-muted)' }}>
                         The CHSH game proves that a comfortable, local, clockwork universe is mathematically incompatible with observed reality.
                     </p>
+
+                    <h3 style={{ color: 'var(--accent-teal)', marginTop: '3rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Interactive Visualization: LHV vs True Entanglement</h3>
+                    <p style={{ marginTop: '1rem', marginBottom: '2rem' }}>
+                        Interact with the models below to see how Local Hidden Variables produce linear probabilities (due to overlapping regions in the hidden variable space), while Quantum Entanglement produces trigonometric probabilities (due to the geometric projection of states).
+                    </p>
+                    
+                    <InteractiveComparison />
                 </div>
             </div>
         </section>

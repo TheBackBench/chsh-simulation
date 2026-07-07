@@ -1,14 +1,14 @@
-export type ConditionNode = 
+export type ConditionNode =
     | { type: 'RECEIVED', expected: 0 | 1 }
     | { type: 'PROB_COND', prob: number }
     | { type: 'MEASURE_SPIN_COND', angle: number, expected: boolean };
 
-export type ActionNode = 
+export type ActionNode =
     | { type: 'RETURN', value: boolean }
     | { type: 'PROB', prob: number } // prob from 0 to 100
     | { type: 'MEASURE_SPIN', angle: number };
 
-export type BlockNode = 
+export type BlockNode =
     | { type: 'IF_ELSE', condition: ConditionNode | null, trueBranch: BlockNode | null, falseBranch: BlockNode | null }
     | ActionNode;
 
@@ -49,7 +49,7 @@ export class EntangledPair {
     secondAngle: number = 0;
     secondResult: boolean = false;
 
-    measure(player: 'alice'|'bob', angleRad: number): boolean {
+    measure(player: 'alice' | 'bob', angleRad: number): boolean {
         if (!this.firstMeasured) {
             this.firstMeasured = player;
             this.firstAngle = angleRad;
@@ -58,7 +58,8 @@ export class EntangledPair {
         } else {
             this.secondMeasured = player;
             this.secondAngle = angleRad;
-            const probSame = Math.pow(Math.cos(this.firstAngle - angleRad), 2);
+            // Anti-Correlated Spin-1/2 Math (Singlet State)
+            const probSame = Math.pow(Math.sin((this.firstAngle - angleRad) / 2), 2);
             const same = Math.random() < probSame;
             this.secondResult = same ? this.firstResult : !this.firstResult;
             return this.secondResult;
@@ -74,7 +75,7 @@ export class LHVPair extends EntangledPair {
         this.hiddenVar = Math.random() * 2 * Math.PI;
     }
 
-    measure(player: 'alice'|'bob', angleRad: number): boolean {
+    measure(player: 'alice' | 'bob', angleRad: number): boolean {
         const normalize = (a: number) => {
             let res = a % (2 * Math.PI);
             if (res < 0) res += 2 * Math.PI;
@@ -103,10 +104,10 @@ export class LHVPair extends EntangledPair {
 }
 
 function evaluateAST(
-    node: BlockNode | null, 
-    instruction: number, 
-    defaultVal: boolean, 
-    pair: EntangledPair | null = null, 
+    node: BlockNode | null,
+    instruction: number,
+    defaultVal: boolean,
+    pair: EntangledPair | null = null,
     player: 'alice' | 'bob' | null = null
 ): boolean {
     if (!node) return defaultVal; // Fallback for incomplete trees
@@ -114,7 +115,7 @@ function evaluateAST(
     if (node.type === 'RETURN') {
         return node.value;
     }
-    
+
     if (node.type === 'PROB') {
         return Math.random() * 100 < node.prob;
     }
@@ -125,7 +126,7 @@ function evaluateAST(
         }
         return Math.random() < 0.5;
     }
-    
+
     if (node.type === 'IF_ELSE') {
         let conditionMet = false;
         if (node.condition) {
@@ -138,14 +139,14 @@ function evaluateAST(
                 conditionMet = measureResult === node.condition.expected;
             }
         }
-        
+
         if (conditionMet) {
             return evaluateAST(node.trueBranch, instruction, defaultVal, pair, player);
         } else {
             return evaluateAST(node.falseBranch, instruction, defaultVal, pair, player);
         }
     }
-    
+
     return defaultVal;
 }
 
@@ -242,7 +243,7 @@ export async function runSimulation(
     quantumStrategy: QuantumStrategy,
     onProgress: (percent: number) => void
 ): Promise<SimulationResult> {
-    
+
     return new Promise((resolve) => {
         let wins = 0;
         const chunkSize = Math.max(100, Math.floor(nGames / 100));
@@ -250,7 +251,7 @@ export async function runSimulation(
 
         function processChunk() {
             const end = Math.min(i + chunkSize, nGames);
-            
+
             for (; i < end; i++) {
                 const result = playSingleRound(mode, evaluationOrder, classicalStrategy, quantumStrategy);
                 if (result.win) {
