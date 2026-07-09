@@ -12,11 +12,68 @@ interface Props {
     onClose: () => void;
 }
 
+const ProbabilityAnimation: React.FC<{ prob: number, result: boolean, duration: number }> = ({ prob, result, duration }) => {
+    const [currentVal, setCurrentVal] = useState<number | null>(null);
+    const [isFinished, setIsFinished] = useState(false);
+
+    useEffect(() => {
+        let finalVal: number;
+        if (result) {
+            // Must be < prob
+            finalVal = Math.floor(Math.random() * prob);
+        } else {
+            // Must be >= prob
+            finalVal = Math.floor(Math.random() * (100 - prob)) + prob;
+        }
+
+        const intervalTime = 50;
+        const spinTime = duration > 600 ? duration - 500 : Math.max(0, duration - 50);
+        const totalSpins = Math.floor(spinTime / intervalTime);
+        let spinCount = 0;
+
+        if (totalSpins <= 0) {
+            setCurrentVal(finalVal);
+            setIsFinished(true);
+            return;
+        }
+
+        const interval = setInterval(() => {
+            spinCount++;
+            if (spinCount >= totalSpins) {
+                clearInterval(interval);
+                setCurrentVal(finalVal);
+                setIsFinished(true);
+            } else {
+                setCurrentVal(Math.floor(Math.random() * 100));
+            }
+        }, intervalTime);
+
+        return () => clearInterval(interval);
+    }, [prob, result, duration]);
+
+    return (
+        <div className={`prob-animation-container ${isFinished ? (result ? 'success' : 'failure') : ''}`}>
+            <div className="prob-value">
+                {currentVal !== null ? currentVal : '--'}
+            </div>
+            <div className="prob-target">
+                &lt; {prob}
+            </div>
+            {isFinished && (
+                <div className="prob-result-label">
+                    {result ? '→ 1' : '→ 0'}
+                </div>
+            )}
+        </div>
+    );
+};
+
 type PlayState = 'playing' | 'paused' | 'finished' | 'pause-requested';
 type RoundStage =
     | 'ready'
     | 'generating-pair'
     | 'sending'
+    | 'evaluating'
     | 'q-measure-1-pending'
     | 'q-measure-1-result'
     | 'q-measure-2-pending'
@@ -150,6 +207,15 @@ export const SimulationDashboard: React.FC<Props> = ({
                 if (isCancelled || playStateRef.current !== 'playing') return;
             }
 
+            // Evaluating Stage (Probability blocks)
+            if (data.probCalculations && data.probCalculations.length > 0) {
+                if (['generating-pair', 'sending', 'evaluating'].includes(startStage)) {
+                    setCurrentStage('evaluating');
+                    await new Promise(r => setTimeout(r, baseDelay * 1.5));
+                    if (isCancelled || playStateRef.current !== 'playing') return;
+                }
+            }
+
             // Quantum Measurement Stages
             if (mode === 'quantum' && data.quantumMeasured && details) {
                 if (details.firstMeasured) {
@@ -182,14 +248,14 @@ export const SimulationDashboard: React.FC<Props> = ({
             }
 
             // Returning Stage
-            if (['generating-pair', 'sending', 'q-measure-1-pending', 'q-measure-1-result', 'q-measure-2-pending', 'q-measure-2-result', 'returning'].includes(startStage)) {
+            if (['generating-pair', 'sending', 'evaluating', 'q-measure-1-pending', 'q-measure-1-result', 'q-measure-2-pending', 'q-measure-2-result', 'returning'].includes(startStage)) {
                 setCurrentStage('returning');
                 await new Promise(r => setTimeout(r, baseDelay));
                 if (isCancelled || playStateRef.current !== 'playing') return;
             }
 
             // Result Stage
-            if (['generating-pair', 'sending', 'q-measure-1-pending', 'q-measure-1-result', 'q-measure-2-pending', 'q-measure-2-result', 'returning'].includes(startStage)) {
+            if (['generating-pair', 'sending', 'evaluating', 'q-measure-1-pending', 'q-measure-1-result', 'q-measure-2-pending', 'q-measure-2-result', 'returning'].includes(startStage)) {
                 setCurrentStage('result');
                 const newWins = wins + (data.win ? 1 : 0);
 
@@ -596,6 +662,13 @@ export const SimulationDashboard: React.FC<Props> = ({
                             {data && currentStage !== 'sending' && currentStage !== 'ready' && (
                                 <div className="bit static-on-alice">{data.x}</div>
                             )}
+                            {currentStage === 'evaluating' && data?.probCalculations?.some(c => c.player === 'alice') && (
+                                <ProbabilityAnimation 
+                                    prob={data.probCalculations.find(c => c.player === 'alice')!.prob}
+                                    result={data.probCalculations.find(c => c.player === 'alice')!.result}
+                                    duration={baseDelay * 1.5}
+                                />
+                            )}
                             {renderQuantumOverlay('alice', data, isEntangled)}
                         </div>
 
@@ -609,6 +682,13 @@ export const SimulationDashboard: React.FC<Props> = ({
                             👨 Bob
                             {data && currentStage !== 'sending' && currentStage !== 'ready' && (
                                 <div className="bit static-on-bob">{data.y}</div>
+                            )}
+                            {currentStage === 'evaluating' && data?.probCalculations?.some(c => c.player === 'bob') && (
+                                <ProbabilityAnimation 
+                                    prob={data.probCalculations.find(c => c.player === 'bob')!.prob}
+                                    result={data.probCalculations.find(c => c.player === 'bob')!.result}
+                                    duration={baseDelay * 1.5}
+                                />
                             )}
                             {renderQuantumOverlay('bob', data, isEntangled)}
                         </div>

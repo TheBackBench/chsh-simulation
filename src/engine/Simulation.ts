@@ -103,12 +103,15 @@ export class LHVPair extends EntangledPair {
     }
 }
 
+export type ProbCalculation = { player: 'alice' | 'bob'; prob: number; result: boolean };
+
 function evaluateAST(
     node: BlockNode | null,
     instruction: number,
     defaultVal: boolean,
     pair: EntangledPair | null = null,
-    player: 'alice' | 'bob' | null = null
+    player: 'alice' | 'bob' | null = null,
+    probCalculations: ProbCalculation[] = []
 ): boolean {
     if (!node) return defaultVal; // Fallback for incomplete trees
 
@@ -117,7 +120,9 @@ function evaluateAST(
     }
 
     if (node.type === 'PROB') {
-        return Math.random() * 100 < node.prob;
+        const result = Math.random() * 100 < node.prob;
+        if (player) probCalculations.push({ player, prob: node.prob, result });
+        return result;
     }
 
     if (node.type === 'MEASURE_SPIN') {
@@ -133,7 +138,9 @@ function evaluateAST(
             if (node.condition.type === 'RECEIVED') {
                 conditionMet = instruction === node.condition.expected;
             } else if (node.condition.type === 'PROB_COND') {
-                conditionMet = Math.random() * 100 < node.condition.prob;
+                const result = Math.random() * 100 < node.condition.prob;
+                if (player) probCalculations.push({ player, prob: node.condition.prob, result });
+                conditionMet = result;
             } else if (node.condition.type === 'MEASURE_SPIN_COND') {
                 const measureResult = pair && player ? pair.measure(player, node.condition.angle * (Math.PI / 180)) : Math.random() < 0.5;
                 conditionMet = measureResult === node.condition.expected;
@@ -141,9 +148,9 @@ function evaluateAST(
         }
 
         if (conditionMet) {
-            return evaluateAST(node.trueBranch, instruction, defaultVal, pair, player);
+            return evaluateAST(node.trueBranch, instruction, defaultVal, pair, player, probCalculations);
         } else {
-            return evaluateAST(node.falseBranch, instruction, defaultVal, pair, player);
+            return evaluateAST(node.falseBranch, instruction, defaultVal, pair, player, probCalculations);
         }
     }
 
@@ -166,6 +173,7 @@ export interface RoundResult {
         secondResult: boolean;
         hiddenVar?: number;
     };
+    probCalculations?: ProbCalculation[];
 }
 
 export function playSingleRound(
@@ -182,6 +190,7 @@ export function playSingleRound(
     let outA: boolean, outB: boolean;
     let quantumMeasured = false;
     let pair: EntangledPair | null = null;
+    const probCalculations: ProbCalculation[] = [];
 
     let isAliceFirst = true;
     if (evaluationOrder === 'bob') isAliceFirst = false;
@@ -189,38 +198,38 @@ export function playSingleRound(
 
     if (mode === 'classical') {
         if (isAliceFirst) {
-            outA = evaluateAST(classicalStrategy.alice, x, classicalStrategy.aliceDefault);
-            outB = evaluateAST(classicalStrategy.bob, y, classicalStrategy.bobDefault);
+            outA = evaluateAST(classicalStrategy.alice, x, classicalStrategy.aliceDefault, null, 'alice', probCalculations);
+            outB = evaluateAST(classicalStrategy.bob, y, classicalStrategy.bobDefault, null, 'bob', probCalculations);
         } else {
-            outB = evaluateAST(classicalStrategy.bob, y, classicalStrategy.bobDefault);
-            outA = evaluateAST(classicalStrategy.alice, x, classicalStrategy.aliceDefault);
+            outB = evaluateAST(classicalStrategy.bob, y, classicalStrategy.bobDefault, null, 'bob', probCalculations);
+            outA = evaluateAST(classicalStrategy.alice, x, classicalStrategy.aliceDefault, null, 'alice', probCalculations);
         }
     } else {
         if (simulateNoEntanglement) {
             pair = new LHVPair();
             if (isAliceFirst) {
-                outA = evaluateAST(quantumStrategy.alice, x, quantumStrategy.aliceDefault, pair, 'alice');
-                outB = evaluateAST(quantumStrategy.bob, y, quantumStrategy.bobDefault, pair, 'bob');
+                outA = evaluateAST(quantumStrategy.alice, x, quantumStrategy.aliceDefault, pair, 'alice', probCalculations);
+                outB = evaluateAST(quantumStrategy.bob, y, quantumStrategy.bobDefault, pair, 'bob', probCalculations);
             } else {
-                outB = evaluateAST(quantumStrategy.bob, y, quantumStrategy.bobDefault, pair, 'bob');
-                outA = evaluateAST(quantumStrategy.alice, x, quantumStrategy.aliceDefault, pair, 'alice');
+                outB = evaluateAST(quantumStrategy.bob, y, quantumStrategy.bobDefault, pair, 'bob', probCalculations);
+                outA = evaluateAST(quantumStrategy.alice, x, quantumStrategy.aliceDefault, pair, 'alice', probCalculations);
             }
             quantumMeasured = pair.firstMeasured !== null;
         } else {
             pair = new EntangledPair();
             if (isAliceFirst) {
-                outA = evaluateAST(quantumStrategy.alice, x, quantumStrategy.aliceDefault, pair, 'alice');
-                outB = evaluateAST(quantumStrategy.bob, y, quantumStrategy.bobDefault, pair, 'bob');
+                outA = evaluateAST(quantumStrategy.alice, x, quantumStrategy.aliceDefault, pair, 'alice', probCalculations);
+                outB = evaluateAST(quantumStrategy.bob, y, quantumStrategy.bobDefault, pair, 'bob', probCalculations);
             } else {
-                outB = evaluateAST(quantumStrategy.bob, y, quantumStrategy.bobDefault, pair, 'bob');
-                outA = evaluateAST(quantumStrategy.alice, x, quantumStrategy.aliceDefault, pair, 'alice');
+                outB = evaluateAST(quantumStrategy.bob, y, quantumStrategy.bobDefault, pair, 'bob', probCalculations);
+                outA = evaluateAST(quantumStrategy.alice, x, quantumStrategy.aliceDefault, pair, 'alice', probCalculations);
             }
             quantumMeasured = pair.firstMeasured !== null;
         }
     }
 
     const win = checkWin(x, y, outA, outB);
-    const result: RoundResult = { x, y, outA, outB, win, quantumMeasured };
+    const result: RoundResult = { x, y, outA, outB, win, quantumMeasured, probCalculations };
     if (mode === 'quantum' && pair) {
         result.quantumDetails = {
             firstMeasured: pair.firstMeasured,
