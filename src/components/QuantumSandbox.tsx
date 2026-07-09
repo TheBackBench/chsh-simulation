@@ -7,7 +7,6 @@ interface Props {
     strategy: QuantumStrategy;
     setStrategy: React.Dispatch<React.SetStateAction<QuantumStrategy>>;
     isActive: boolean;
-    onHelpClick?: () => void;
 }
 
 const DraggableBlock: React.FC<{ type: string, label: string, className: string, title?: string }> = ({ type, label, className, title }) => {
@@ -27,7 +26,7 @@ const DraggableBlock: React.FC<{ type: string, label: string, className: string,
     );
 };
 
-export const QuantumSandbox: React.FC<Props> = ({ strategy, setStrategy, isActive, onHelpClick }) => {
+export const QuantumSandbox: React.FC<Props> = ({ strategy, setStrategy, isActive }) => {
     if (!isActive) return null;
 
     const handleAliceChange = (node: BlockNode | null) => {
