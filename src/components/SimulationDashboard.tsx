@@ -73,15 +73,9 @@ type RoundStage =
     | 'ready'
     | 'generating-pair'
     | 'sending'
-    | 'evaluating'
-    | 'q-measure-1-pending'
-    | 'q-measure-1-result'
-    | 'q-measure-2-pending'
-    | 'q-measure-2-result'
+    | 'executing'
     | 'returning'
     | 'result';
-
-
 
 export const SimulationDashboard: React.FC<Props> = ({
     mode, nGames, evaluationOrder, classicalStrategy, quantumStrategy, compareClassical, onClose
@@ -98,7 +92,16 @@ export const SimulationDashboard: React.FC<Props> = ({
     const [currentStage, setCurrentStage] = useState<RoundStage>('ready');
     const [roundData, setRoundData] = useState<RoundResult | null>(null);
 
-    // New State for No Entanglement parallel run
+    const [activeEventIndex, setActiveEventIndex] = useState<number>(-1);
+    const [activeEventSubstage, setActiveEventSubstage] = useState<'pending' | 'result'>('pending');
+
+    const activeEventIndexRef = useRef(activeEventIndex);
+    activeEventIndexRef.current = activeEventIndex;
+    
+    const activeEventSubstageRef = useRef(activeEventSubstage);
+    activeEventSubstageRef.current = activeEventSubstage;
+
+    // New State for No Entanglement parallel run run
     const [noEntWins, setNoEntWins] = useState(0);
     const [noEntHistoryRates, setNoEntHistoryRates] = useState<number[]>([]);
     const [noEntRoundData, setNoEntRoundData] = useState<RoundResult | null>(null);
@@ -154,6 +157,7 @@ export const SimulationDashboard: React.FC<Props> = ({
         setRoundData(null);
         setNoEntRoundData(null);
         setCurrentStage('result');
+        setActiveEventIndex(-1);
     };
 
     useEffect(() => {
@@ -173,6 +177,7 @@ export const SimulationDashboard: React.FC<Props> = ({
                     setNoEntRoundData(null);
                 }
                 setCurrentStage('ready');
+                setActiveEventIndex(-1);
                 setRound(r => r + 1);
                 return;
             }
@@ -190,7 +195,7 @@ export const SimulationDashboard: React.FC<Props> = ({
                 }
             }
 
-            const details = data.quantumDetails;
+
             const startStage = currentStage === 'ready' ? 'generating-pair' : currentStage;
 
             // Generating Pair Stage
@@ -207,55 +212,55 @@ export const SimulationDashboard: React.FC<Props> = ({
                 if (isCancelled || playStateRef.current !== 'playing') return;
             }
 
-            // Evaluating Stage (Probability blocks)
-            if (data.probCalculations && data.probCalculations.length > 0) {
-                if (['generating-pair', 'sending', 'evaluating'].includes(startStage)) {
-                    setCurrentStage('evaluating');
-                    await new Promise(r => setTimeout(r, baseDelay * 1.5));
-                    if (isCancelled || playStateRef.current !== 'playing') return;
-                }
-            }
-
-            // Quantum Measurement Stages
-            if (mode === 'quantum' && data.quantumMeasured && details) {
-                if (details.firstMeasured) {
-                    if (['generating-pair', 'sending', 'q-measure-1-pending'].includes(startStage)) {
-                        setCurrentStage('q-measure-1-pending');
-                        await new Promise(r => setTimeout(r, baseDelay));
-                        if (isCancelled || playStateRef.current !== 'playing') return;
-                    }
-
-                    if (['generating-pair', 'sending', 'q-measure-1-pending', 'q-measure-1-result'].includes(startStage)) {
-                        setCurrentStage('q-measure-1-result');
-                        await new Promise(r => setTimeout(r, baseDelay));
-                        if (isCancelled || playStateRef.current !== 'playing') return;
-                    }
+            // Executing Stage (Dynamic Execution Trace)
+            if (data.executionTrace && data.executionTrace.length > 0) {
+                let startIndex = 0;
+                let startSubstage = 'pending';
+                if (startStage === 'executing') {
+                    startIndex = activeEventIndexRef.current;
+                    startSubstage = activeEventSubstageRef.current;
                 }
 
-                if (details.secondMeasured) {
-                    if (['generating-pair', 'sending', 'q-measure-1-pending', 'q-measure-1-result', 'q-measure-2-pending'].includes(startStage)) {
-                        setCurrentStage('q-measure-2-pending');
-                        await new Promise(r => setTimeout(r, baseDelay));
-                        if (isCancelled || playStateRef.current !== 'playing') return;
-                    }
-
-                    if (['generating-pair', 'sending', 'q-measure-1-pending', 'q-measure-1-result', 'q-measure-2-pending', 'q-measure-2-result'].includes(startStage)) {
-                        setCurrentStage('q-measure-2-result');
-                        await new Promise(r => setTimeout(r, baseDelay));
-                        if (isCancelled || playStateRef.current !== 'playing') return;
+                for (let i = startIndex; i < data.executionTrace.length; i++) {
+                    const event = data.executionTrace[i];
+                    setCurrentStage('executing');
+                    setActiveEventIndex(i);
+                    activeEventIndexRef.current = i;
+                    
+                    if (event.type === 'PROB') {
+                        if (startSubstage === 'pending' || i > startIndex) {
+                            setActiveEventSubstage('pending');
+                            await new Promise(r => setTimeout(r, baseDelay * 1.5));
+                            if (isCancelled || playStateRef.current !== 'playing') return;
+                        }
+                    } else if (event.type === 'MEASURE_SPIN') {
+                        if (startSubstage === 'pending' || i > startIndex) {
+                            setActiveEventSubstage('pending');
+                            activeEventSubstageRef.current = 'pending';
+                            await new Promise(r => setTimeout(r, baseDelay));
+                            if (isCancelled || playStateRef.current !== 'playing') return;
+                        }
+                        
+                        if (startSubstage === 'pending' || startSubstage === 'result' || i > startIndex) {
+                            setActiveEventSubstage('result');
+                            activeEventSubstageRef.current = 'result';
+                            await new Promise(r => setTimeout(r, baseDelay));
+                            if (isCancelled || playStateRef.current !== 'playing') return;
+                        }
                     }
                 }
             }
 
             // Returning Stage
-            if (['generating-pair', 'sending', 'evaluating', 'q-measure-1-pending', 'q-measure-1-result', 'q-measure-2-pending', 'q-measure-2-result', 'returning'].includes(startStage)) {
+            if (['generating-pair', 'sending', 'executing', 'returning'].includes(startStage)) {
                 setCurrentStage('returning');
+                setActiveEventIndex(-1);
                 await new Promise(r => setTimeout(r, baseDelay));
                 if (isCancelled || playStateRef.current !== 'playing') return;
             }
 
             // Result Stage
-            if (['generating-pair', 'sending', 'evaluating', 'q-measure-1-pending', 'q-measure-1-result', 'q-measure-2-pending', 'q-measure-2-result', 'returning'].includes(startStage)) {
+            if (['generating-pair', 'sending', 'executing', 'returning'].includes(startStage)) {
                 setCurrentStage('result');
                 const newWins = wins + (data.win ? 1 : 0);
 
@@ -524,63 +529,27 @@ export const SimulationDashboard: React.FC<Props> = ({
     };
 
     const renderQuantumOverlay = (player: 'alice' | 'bob', data: RoundResult | null, isEntangled: boolean = true) => {
-        if (mode !== 'quantum' || !data || !data.quantumDetails) return null;
-        const details = data.quantumDetails;
+        if (mode !== 'quantum' || !data || currentStage === 'ready' || currentStage === 'generating-pair' || currentStage === 'sending' || currentStage === 'result' || currentStage === 'returning') return null;
 
-        // Check if this player measures first
-        if (details.firstMeasured === player) {
-            if (currentStage === 'q-measure-1-pending') {
-                return (
-                    <div className={`quantum-overlay pending ${!isEntangled ? 'no-ent-overlay' : ''}`}>
-                        {renderUnitCircle(details.firstAngle, true, false, false, undefined, !isEntangled ? details.hiddenVar : undefined, player === 'alice')}
-                        <div className="quantum-spin-result">?</div>
-                        <div className="quantum-status-text">Measuring at {details.firstAngle.toFixed(0)}°</div>
-                    </div>
-                );
-            }
-            const showResult = [
-                'q-measure-1-result',
-                'q-measure-2-pending',
-                'q-measure-2-result',
-                'returning',
-                'result'
-            ].includes(currentStage);
-            if (showResult) {
-                return (
-                    <div className={`quantum-overlay measured ${!isEntangled ? 'no-ent-overlay' : ''}`}>
-                        {renderUnitCircle(details.firstAngle, false, true, details.firstResult, undefined, !isEntangled ? details.hiddenVar : undefined, player === 'alice')}
-                        <div className="quantum-spin-result">{details.firstResult ? '↑ (Up)' : '↓ (Down)'}</div>
-                        <div className="quantum-status-text">Measured at {details.firstAngle.toFixed(0)}°</div>
-                    </div>
-                );
-            }
-        }
+        if (currentStage === 'executing' && activeEventIndex >= 0 && data.executionTrace) {
+            const event = data.executionTrace[activeEventIndex];
+            if (event && event.type === 'MEASURE_SPIN' && event.player === player) {
+                const isPending = activeEventSubstage === 'pending';
+                const showResult = activeEventSubstage === 'result';
+                
+                let collapsedState = undefined;
+                if (!event.isFirst && isEntangled) {
+                    const firstEvent = data.executionTrace.find(e => e.type === 'MEASURE_SPIN' && e.isFirst);
+                    if (firstEvent && firstEvent.type === 'MEASURE_SPIN') {
+                        collapsedState = { angle: firstEvent.angle, resultUp: firstEvent.result };
+                    }
+                }
 
-        // Check if this player measures second
-        if (details.secondMeasured === player) {
-            const firstResultMeasured = ['q-measure-2-pending', 'q-measure-2-result', 'returning', 'result'].includes(currentStage);
-            const collapsedState = (isEntangled && firstResultMeasured) ? { angle: details.firstAngle, resultUp: details.firstResult } : undefined;
-
-            if (currentStage === 'q-measure-2-pending') {
                 return (
-                    <div className={`quantum-overlay pending ${!isEntangled ? 'no-ent-overlay' : ''}`}>
-                        {renderUnitCircle(details.secondAngle, true, false, false, collapsedState, !isEntangled ? details.hiddenVar : undefined, player === 'alice')}
-                        <div className="quantum-spin-result">?</div>
-                        <div className="quantum-status-text">Measuring at {details.secondAngle.toFixed(0)}°</div>
-                    </div>
-                );
-            }
-            const showResult = [
-                'q-measure-2-result',
-                'returning',
-                'result'
-            ].includes(currentStage);
-            if (showResult) {
-                return (
-                    <div className={`quantum-overlay measured ${!isEntangled ? 'no-ent-overlay' : ''}`}>
-                        {renderUnitCircle(details.secondAngle, false, true, details.secondResult, collapsedState, !isEntangled ? details.hiddenVar : undefined, player === 'alice')}
-                        <div className="quantum-spin-result">{details.secondResult ? '↑ (Up)' : '↓ (Down)'}</div>
-                        <div className="quantum-status-text">Measured at {details.secondAngle.toFixed(0)}°</div>
+                    <div className={`quantum-overlay ${showResult ? 'measured' : 'pending'} ${!isEntangled ? 'no-ent-overlay' : ''}`}>
+                        {renderUnitCircle(event.angle, isPending, showResult, event.result, collapsedState, !isEntangled ? event.hiddenVar : undefined, player === 'alice')}
+                        <div className="quantum-spin-result">{showResult ? (event.result ? '↑ (Up)' : '↓ (Down)') : '?'}</div>
+                        <div className="quantum-status-text">{isPending ? 'Measuring' : 'Measured'} at {event.angle.toFixed(0)}°</div>
                     </div>
                 );
             }
@@ -622,7 +591,10 @@ export const SimulationDashboard: React.FC<Props> = ({
                         )}
                     </div>
 
-                    {!isEntangled && data && currentStage !== 'ready' && data.quantumDetails && (
+                    {!isEntangled && data && currentStage !== 'ready' && data.quantumMeasured && (() => {
+                        const hiddenVarEvent = data.executionTrace?.find(e => e.type === 'MEASURE_SPIN' && e.isFirst);
+                        const hiddenVar = hiddenVarEvent?.type === 'MEASURE_SPIN' ? hiddenVarEvent.hiddenVar : 0;
+                        return (
                         <div className="hidden-var-subwindow glass-panel" style={{ position: 'absolute', right: '40px', bottom: '-2px', padding: '0.75rem', display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 10, background: 'rgba(11, 15, 25, 0.95)', border: '1px solid var(--glass-border)', borderRadius: '8px', boxShadow: '0 4px 15px rgba(0, 0, 0, 0.6)' }}>
                             <div style={{ marginBottom: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>
                                 Hidden Variables
@@ -631,7 +603,7 @@ export const SimulationDashboard: React.FC<Props> = ({
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                     <svg width="40" height="40" viewBox="-50 -50 100 100" style={{ overflow: 'visible' }}>
                                         <circle cx="0" cy="0" r="40" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
-                                        <g className="spinning-hidden-var" style={{ '--target-angle': `${-(data.quantumDetails.hiddenVar || 0)}deg` } as React.CSSProperties}>
+                                        <g className="spinning-hidden-var" style={{ '--target-angle': `${-(hiddenVar || 0)}deg` } as React.CSSProperties}>
                                             <path d="M 0,-40 A 40,40 0 0,1 0,40 Z" fill="rgba(0, 255, 159, 0.15)" stroke="rgba(0, 255, 159, 0.3)" strokeDasharray="2 2" />
                                             <path d="M 0,40 A 40,40 0 0,1 0,-40 Z" fill="rgba(255, 68, 68, 0.15)" stroke="rgba(255, 68, 68, 0.3)" strokeDasharray="2 2" />
                                             <line x1="-40" y1="0" x2="35" y2="0" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="1.5" strokeDasharray="2 2" />
@@ -643,7 +615,7 @@ export const SimulationDashboard: React.FC<Props> = ({
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                     <svg width="40" height="40" viewBox="-50 -50 100 100" style={{ overflow: 'visible' }}>
                                         <circle cx="0" cy="0" r="40" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
-                                        <g className="spinning-hidden-var" style={{ '--target-angle': `${-((data.quantumDetails.hiddenVar || 0) + 180)}deg` } as React.CSSProperties}>
+                                        <g className="spinning-hidden-var" style={{ '--target-angle': `${-((hiddenVar || 0) + 180)}deg` } as React.CSSProperties}>
                                             <path d="M 0,-40 A 40,40 0 0,1 0,40 Z" fill="rgba(0, 255, 159, 0.15)" stroke="rgba(0, 255, 159, 0.3)" strokeDasharray="2 2" />
                                             <path d="M 0,40 A 40,40 0 0,1 0,-40 Z" fill="rgba(255, 68, 68, 0.15)" stroke="rgba(255, 68, 68, 0.3)" strokeDasharray="2 2" />
                                             <line x1="-40" y1="0" x2="35" y2="0" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="1.5" strokeDasharray="2 2" />
@@ -654,7 +626,8 @@ export const SimulationDashboard: React.FC<Props> = ({
                                 </div>
                             </div>
                         </div>
-                    )}
+                        );
+                    })()}
 
                     <div className="players">
                         <div className="player-node alice">
@@ -662,10 +635,10 @@ export const SimulationDashboard: React.FC<Props> = ({
                             {data && currentStage !== 'sending' && currentStage !== 'ready' && (
                                 <div className="bit static-on-alice">{data.x}</div>
                             )}
-                            {currentStage === 'evaluating' && data?.probCalculations?.some(c => c.player === 'alice') && (
+                            {currentStage === 'executing' && activeEventIndex >= 0 && data?.executionTrace?.[activeEventIndex]?.type === 'PROB' && data.executionTrace[activeEventIndex].player === 'alice' && (
                                 <ProbabilityAnimation 
-                                    prob={data.probCalculations.find(c => c.player === 'alice')!.prob}
-                                    result={data.probCalculations.find(c => c.player === 'alice')!.result}
+                                    prob={(data.executionTrace[activeEventIndex] as any).prob}
+                                    result={(data.executionTrace[activeEventIndex] as any).result}
                                     duration={baseDelay * 1.5}
                                 />
                             )}
@@ -683,10 +656,10 @@ export const SimulationDashboard: React.FC<Props> = ({
                             {data && currentStage !== 'sending' && currentStage !== 'ready' && (
                                 <div className="bit static-on-bob">{data.y}</div>
                             )}
-                            {currentStage === 'evaluating' && data?.probCalculations?.some(c => c.player === 'bob') && (
+                            {currentStage === 'executing' && activeEventIndex >= 0 && data?.executionTrace?.[activeEventIndex]?.type === 'PROB' && data.executionTrace[activeEventIndex].player === 'bob' && (
                                 <ProbabilityAnimation 
-                                    prob={data.probCalculations.find(c => c.player === 'bob')!.prob}
-                                    result={data.probCalculations.find(c => c.player === 'bob')!.result}
+                                    prob={(data.executionTrace[activeEventIndex] as any).prob}
+                                    result={(data.executionTrace[activeEventIndex] as any).result}
                                     duration={baseDelay * 1.5}
                                 />
                             )}

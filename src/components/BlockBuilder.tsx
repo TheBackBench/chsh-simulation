@@ -141,7 +141,7 @@ export const BlockBuilder: React.FC<Props> = ({ node, onChange }) => {
                 <div style={{ display: 'inline-block' }}>
                     <div className="block block-action">
                         <button className="block-delete" onClick={() => onChange(null)}>✕</button>
-                        <strong>Return</strong> {node.value ? 'True' : 'False'}
+                        <strong>Return</strong> {node.value ? '1' : '0'}
                     </div>
                 </div>
             </div>
