@@ -387,15 +387,6 @@ export const SimulationDashboard: React.FC<Props> = ({
         return 'active-row';
     };
 
-    const getSecondMeasurementProbs = (details: NonNullable<RoundResult['quantumDetails']>) => {
-        if (!details.firstMeasured || !details.secondMeasured) return { pctUp: 50, pctDown: 50 };
-        const diffRad = (details.firstAngle - details.secondAngle) * (Math.PI / 180);
-        const pSame = Math.pow(Math.cos(diffRad), 2);
-        const pUp = details.firstResult ? pSame : (1 - pSame);
-        const pctUp = Math.round(pUp * 100);
-        const pctDown = 100 - pctUp;
-        return { pctUp, pctDown };
-    };
 
     const renderUnitCircle = (
         angle: number,
@@ -505,12 +496,6 @@ export const SimulationDashboard: React.FC<Props> = ({
             const collapsedState = (isEntangled && firstResultMeasured) ? { angle: details.firstAngle, resultUp: details.firstResult } : undefined;
 
             if (currentStage === 'q-measure-2-pending') {
-                const angleDiff = Math.abs((details.firstAngle - details.secondAngle) % 360);
-                const normAngleDiff = angleDiff > 180 ? 360 - angleDiff : angleDiff;
-
-                const pSame = Math.pow(Math.cos(normAngleDiff * Math.PI / 180), 2);
-                const linearProbSame = 1 - (normAngleDiff / 180);
-
                 return (
                     <div className={`quantum-overlay pending ${!isEntangled ? 'no-ent-overlay' : ''}`}>
                         {renderUnitCircle(details.secondAngle, true, false, false, collapsedState, !isEntangled ? details.hiddenVar : undefined, player === 'alice')}
@@ -542,7 +527,6 @@ export const SimulationDashboard: React.FC<Props> = ({
         let mathText: React.ReactNode = <span style={{ color: 'var(--text-muted)' }}>Waiting for round to begin...</span>;
 
         if (data?.quantumDetails) {
-            const details = data.quantumDetails;
             // Placeholder for live explanation text
             mathText = "Live explaining to be added later";
         }
