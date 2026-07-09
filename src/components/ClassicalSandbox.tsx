@@ -36,6 +36,15 @@ export const ClassicalSandbox: React.FC<Props> = ({ strategy, setStrategy, isAct
         setStrategy(prev => ({ ...prev, bob: node }));
     };
 
+    const clearBlocks = () => {
+        setStrategy({
+            alice: null,
+            bob: null,
+            aliceDefault: false,
+            bobDefault: false
+        });
+    };
+
     const loadOptimal = () => {
         setStrategy({
             alice: { type: 'RETURN', value: true },
@@ -52,7 +61,7 @@ export const ClassicalSandbox: React.FC<Props> = ({ strategy, setStrategy, isAct
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                     <div style={{ flex: 1 }}></div>
                     <h3 style={{ margin: 0, textAlign: 'center', flex: 1 }}>Block Bank</h3>
-                    <div style={{ flex: 1, textAlign: 'right' }}>
+                    <div style={{ flex: 1, textAlign: 'right', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                         <button
                             className="secondary-btn"
                             onClick={loadOptimal}
@@ -60,6 +69,14 @@ export const ClassicalSandbox: React.FC<Props> = ({ strategy, setStrategy, isAct
                             style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}
                         >
                             Build Optimal Strategy
+                        </button>
+                        <button
+                            className="secondary-btn"
+                            onClick={clearBlocks}
+                            title="Clears all dragged strategy blocks"
+                            style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem', borderColor: 'rgba(255, 68, 68, 0.4)', color: '#ff7777' }}
+                        >
+                            Clear Blocks
                         </button>
                     </div>
                 </div>

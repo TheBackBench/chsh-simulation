@@ -58,6 +58,7 @@
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    min-width: 0;
 }
 
 .turn-counter {
@@ -77,8 +78,8 @@
     align-items: center;
     margin: 1rem auto;
     min-height: 320px;
-    width: 900px;
-    max-width: 100%;
+    width: 100%;
+    max-width: 900px;
 }
 
 .computer-node {
@@ -109,9 +110,7 @@
     left: 40px;
     top: 0;
     bottom: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
+    width: 120px;
 }
 
 .player-node {
@@ -120,7 +119,7 @@
     border-radius: 8px;
     font-weight: bold;
     font-size: 1.2rem;
-    position: relative;
+    position: absolute;
     width: 120px;
     height: 60px;
     display: flex;
@@ -128,12 +127,29 @@
     justify-content: center;
 }
 
+.player-node.alice {
+    top: calc(18.75% - 30px);
+    left: 0;
+}
+
+.player-node.bob {
+    top: calc(81.25% - 30px);
+    left: 0;
+}
+
 .quantum-link {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 250px;
+    white-space: nowrap;
     text-align: center;
     color: var(--quantum-pink);
     opacity: 0.3;
     font-size: 0.9rem;
     transition: all 0.3s;
+    pointer-events: none;
 }
 
 .quantum-link.measured {
@@ -228,7 +244,7 @@
     }
     100% {
         left: 100px;
-        top: calc(16.666% - 48px);
+        top: calc(18.75% - 48px);
         opacity: 1;
         transform: translate(-50%, -50%);
     }
@@ -246,7 +262,7 @@
     }
     100% {
         left: 100px;
-        top: calc(83.333% - 48px);
+        top: calc(81.25% - 48px);
         opacity: 1;
         transform: translate(-50%, -50%);
     }
@@ -255,7 +271,7 @@
 @keyframes absReturnAlice {
     0% {
         left: 100px;
-        top: calc(16.666% - 48px);
+        top: calc(18.75% - 48px);
         opacity: 1;
         transform: translate(-50%, -50%);
     }
@@ -273,7 +289,7 @@
 @keyframes absReturnBob {
     0% {
         left: 100px;
-        top: calc(83.333% - 48px);
+        top: calc(81.25% - 48px);
         opacity: 1;
         transform: translate(-50%, -50%);
     }
@@ -389,6 +405,8 @@
     font-weight: bold;
     border-top: 2px solid var(--accent-teal) !important;
     border-bottom: 2px solid var(--accent-teal) !important;
+    position: relative;
+    z-index: 1;
 }
 
 .rules-table tr.active-row td:first-child {

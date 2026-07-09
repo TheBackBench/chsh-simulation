@@ -58,8 +58,8 @@ export class EntangledPair {
         } else {
             this.secondMeasured = player;
             this.secondAngle = angleRad;
-            // Anti-Correlated Spin-1/2 Math (Singlet State)
-            const probSame = Math.pow(Math.sin((this.firstAngle - angleRad) / 2), 2);
+            // Correlated Photon Polarization Math
+            const probSame = Math.pow(Math.cos(this.firstAngle - angleRad), 2);
             const same = Math.random() < probSame;
             this.secondResult = same ? this.firstResult : !this.firstResult;
             return this.secondResult;
@@ -104,7 +104,7 @@ export class LHVPair extends EntangledPair {
 }
 
 export type ExecutionEvent =
-    | { type: 'PROB'; player: 'alice' | 'bob'; prob: number; result: boolean }
+    | { type: 'PROB'; player: 'alice' | 'bob'; prob: number; result: boolean; randVal: number }
     | { type: 'MEASURE_SPIN'; player: 'alice' | 'bob'; angle: number; result: boolean; isFirst: boolean; hiddenVar?: number };
 
 function evaluateAST(
@@ -122,8 +122,9 @@ function evaluateAST(
     }
 
     if (node.type === 'PROB') {
-        const result = Math.random() * 100 < node.prob;
-        if (player) executionTrace.push({ type: 'PROB', player, prob: node.prob, result });
+        const randVal = Math.random() * 100;
+        const result = randVal < node.prob;
+        if (player) executionTrace.push({ type: 'PROB', player, prob: node.prob, result, randVal });
         return result;
     }
 
@@ -137,7 +138,7 @@ function evaluateAST(
                 angle: node.angle,
                 result: measureResult,
                 isFirst: wasFirst,
-                hiddenVar: wasFirst && pair instanceof LHVPair ? pair.hiddenVar * (180 / Math.PI) : undefined
+                hiddenVar: pair instanceof LHVPair ? pair.hiddenVar * (180 / Math.PI) : undefined
             });
             return measureResult;
         }
@@ -150,8 +151,9 @@ function evaluateAST(
             if (node.condition.type === 'RECEIVED') {
                 conditionMet = instruction === node.condition.expected;
             } else if (node.condition.type === 'PROB_COND') {
-                const result = Math.random() * 100 < node.condition.prob;
-                if (player) executionTrace.push({ type: 'PROB', player, prob: node.condition.prob, result });
+                const randVal = Math.random() * 100;
+                const result = randVal < node.condition.prob;
+                if (player) executionTrace.push({ type: 'PROB', player, prob: node.condition.prob, result, randVal });
                 conditionMet = result;
             } else if (node.condition.type === 'MEASURE_SPIN_COND') {
                 let measureResult = false;
@@ -164,7 +166,7 @@ function evaluateAST(
                         angle: node.condition.angle,
                         result: measureResult,
                         isFirst: wasFirst,
-                        hiddenVar: wasFirst && pair instanceof LHVPair ? pair.hiddenVar * (180 / Math.PI) : undefined
+                        hiddenVar: pair instanceof LHVPair ? pair.hiddenVar * (180 / Math.PI) : undefined
                     });
                 } else {
                     measureResult = Math.random() < 0.5;

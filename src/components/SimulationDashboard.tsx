@@ -12,19 +12,12 @@ interface Props {
     onClose: () => void;
 }
 
-const ProbabilityAnimation: React.FC<{ prob: number, result: boolean, duration: number }> = ({ prob, result, duration }) => {
+const ProbabilityAnimation: React.FC<{ prob: number, result: boolean, duration: number, randVal: number, style?: React.CSSProperties }> = ({ prob, result, duration, randVal, style }) => {
     const [currentVal, setCurrentVal] = useState<number | null>(null);
     const [isFinished, setIsFinished] = useState(false);
 
     useEffect(() => {
-        let finalVal: number;
-        if (result) {
-            // Must be < prob
-            finalVal = Math.floor(Math.random() * prob);
-        } else {
-            // Must be >= prob
-            finalVal = Math.floor(Math.random() * (100 - prob)) + prob;
-        }
+        const finalVal = Math.floor(randVal);
 
         const intervalTime = 50;
         const spinTime = duration > 600 ? duration - 500 : Math.max(0, duration - 50);
@@ -36,6 +29,9 @@ const ProbabilityAnimation: React.FC<{ prob: number, result: boolean, duration: 
             setIsFinished(true);
             return;
         }
+
+        setIsFinished(false);
+        setCurrentVal(null);
 
         const interval = setInterval(() => {
             spinCount++;
@@ -49,10 +45,10 @@ const ProbabilityAnimation: React.FC<{ prob: number, result: boolean, duration: 
         }, intervalTime);
 
         return () => clearInterval(interval);
-    }, [prob, result, duration]);
+    }, [prob, result, duration, randVal]);
 
     return (
-        <div className={`prob-animation-container ${isFinished ? (result ? 'success' : 'failure') : ''}`}>
+        <div className={`prob-animation-container ${isFinished ? (result ? 'success' : 'failure') : ''}`} style={style}>
             <div className="prob-value">
                 {currentVal !== null ? currentVal : '--'}
             </div>
@@ -82,7 +78,7 @@ export const SimulationDashboard: React.FC<Props> = ({
 }) => {
     const [round, setRound] = useState(0);
     const [playState, setPlayState] = useState<PlayState>('playing');
-    const [speed, setSpeed] = useState<1 | 2 | 5 | 10 | 50 | 100>(1);
+    const [speed, setSpeed] = useState<1 | 2 | 5 | 10 | 50 | 100 | 1000>(1);
 
     // Stats
     const [wins, setWins] = useState(0);
@@ -97,7 +93,7 @@ export const SimulationDashboard: React.FC<Props> = ({
 
     const activeEventIndexRef = useRef(activeEventIndex);
     activeEventIndexRef.current = activeEventIndex;
-    
+
     const activeEventSubstageRef = useRef(activeEventSubstage);
     activeEventSubstageRef.current = activeEventSubstage;
 
@@ -226,11 +222,11 @@ export const SimulationDashboard: React.FC<Props> = ({
                     setCurrentStage('executing');
                     setActiveEventIndex(i);
                     activeEventIndexRef.current = i;
-                    
+
                     if (event.type === 'PROB') {
                         if (startSubstage === 'pending' || i > startIndex) {
                             setActiveEventSubstage('pending');
-                            await new Promise(r => setTimeout(r, baseDelay * 1.5));
+                            await new Promise(r => setTimeout(r, baseDelay * 0.8));
                             if (isCancelled || playStateRef.current !== 'playing') return;
                         }
                     } else if (event.type === 'MEASURE_SPIN') {
@@ -240,7 +236,7 @@ export const SimulationDashboard: React.FC<Props> = ({
                             await new Promise(r => setTimeout(r, baseDelay));
                             if (isCancelled || playStateRef.current !== 'playing') return;
                         }
-                        
+
                         if (startSubstage === 'pending' || startSubstage === 'result' || i > startIndex) {
                             setActiveEventSubstage('result');
                             activeEventSubstageRef.current = 'result';
@@ -299,10 +295,15 @@ export const SimulationDashboard: React.FC<Props> = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [round, playState, speed, mode, nGames, evaluationOrder, classicalStrategy, quantumStrategy]);
 
-    const successRate = round > 0 ? (wins / round * 100).toFixed(2) : '0.00';
+    const completedRounds = playState === 'finished'
+        ? round
+        : (currentStage === 'result' ? round + 1 : round);
+
+    const successRate = completedRounds > 0 ? (wins / completedRounds * 100).toFixed(2) : '0.00';
+    const noEntSuccessRate = completedRounds > 0 ? (noEntWins / completedRounds * 100).toFixed(2) : '0.00';
 
     const renderGraph = (isFinished: boolean = false, rates: number[] = historyRates, maxVal: number = theoreticalOptimum, showMax: boolean = showTheoreticalOptimum, isEntangled: boolean = true) => {
-        const width = isFinished ? 500 : 300;
+        const width = isFinished ? 500 : 400;
         const height = isFinished ? 200 : 150;
         const leftMargin = isFinished ? 35 : 30;
         const rightMargin = isFinished ? 35 : 10;
@@ -474,7 +475,6 @@ export const SimulationDashboard: React.FC<Props> = ({
 
         let upArc = null;
         let downArc = null;
-        let hiddenAxis = null;
         if (hiddenVar !== undefined && isAlice !== undefined) {
             const h = isAlice ? hiddenVar : hiddenVar + 180;
             const r = 24;
@@ -485,11 +485,6 @@ export const SimulationDashboard: React.FC<Props> = ({
 
             upArc = <path d={`M ${p1.x},${p1.y} A ${r},${r} 0 0,0 ${p2.x},${p2.y} Z`} fill="rgba(0, 255, 159, 0.15)" stroke="rgba(0, 255, 159, 0.3)" strokeDasharray="2 2" />;
             downArc = <path d={`M ${p2.x},${p2.y} A ${r},${r} 0 0,0 ${p1.x},${p1.y} Z`} fill="rgba(255, 68, 68, 0.15)" stroke="rgba(255, 68, 68, 0.3)" strokeDasharray="2 2" />;
-
-            const hRad = h * Math.PI / 180;
-            const hx = r * Math.cos(hRad);
-            const hy = -r * Math.sin(hRad);
-            hiddenAxis = <line x1="0" y1="0" x2={hx} y2={hy} stroke="rgba(255, 255, 255, 0.4)" strokeWidth="1.5" strokeDasharray="2 2" />;
         }
 
         return (
@@ -499,7 +494,6 @@ export const SimulationDashboard: React.FC<Props> = ({
                 <circle cx="0" cy="0" r="24" className="circle-outline" />
                 <line x1="-28" y1="0" x2="28" y2="0" className="axis-faint" />
                 <line x1="0" y1="-28" x2="0" y2="28" className="axis-faint" />
-                {hiddenAxis}
                 <text x={labelX} y={labelY} className="compass-label" textAnchor="middle" dominantBaseline="middle">Up</text>
 
                 {collapsedState && (
@@ -528,30 +522,71 @@ export const SimulationDashboard: React.FC<Props> = ({
         );
     };
 
-    const renderQuantumOverlay = (player: 'alice' | 'bob', data: RoundResult | null, isEntangled: boolean = true) => {
+    const renderQuantumOverlay = (player: 'alice' | 'bob', data: RoundResult | null, isEntangled: boolean = true, hasProb: boolean = false) => {
         if (mode !== 'quantum' || !data || currentStage === 'ready' || currentStage === 'generating-pair' || currentStage === 'sending' || currentStage === 'result' || currentStage === 'returning') return null;
 
         if (currentStage === 'executing' && activeEventIndex >= 0 && data.executionTrace) {
-            const event = data.executionTrace[activeEventIndex];
-            if (event && event.type === 'MEASURE_SPIN' && event.player === player) {
-                const isPending = activeEventSubstage === 'pending';
-                const showResult = activeEventSubstage === 'result';
-                
-                let collapsedState = undefined;
-                if (!event.isFirst && isEntangled) {
-                    const firstEvent = data.executionTrace.find(e => e.type === 'MEASURE_SPIN' && e.isFirst);
-                    if (firstEvent && firstEvent.type === 'MEASURE_SPIN') {
-                        collapsedState = { angle: firstEvent.angle, resultUp: firstEvent.result };
-                    }
+            let playerEventIdx = -1;
+            for (let i = activeEventIndex; i >= 0; i--) {
+                const event = data.executionTrace[i];
+                if (event && event.type === 'MEASURE_SPIN' && event.player === player) {
+                    playerEventIdx = i;
+                    break;
                 }
+            }
 
-                return (
-                    <div className={`quantum-overlay ${showResult ? 'measured' : 'pending'} ${!isEntangled ? 'no-ent-overlay' : ''}`}>
-                        {renderUnitCircle(event.angle, isPending, showResult, event.result, collapsedState, !isEntangled ? event.hiddenVar : undefined, player === 'alice')}
-                        <div className="quantum-spin-result">{showResult ? (event.result ? '↑ (Up)' : '↓ (Down)') : '?'}</div>
-                        <div className="quantum-status-text">{isPending ? 'Measuring' : 'Measured'} at {event.angle.toFixed(0)}°</div>
-                    </div>
-                );
+            if (playerEventIdx !== -1) {
+                const event = data.executionTrace[playerEventIdx];
+                if (event && event.type === 'MEASURE_SPIN') {
+                    const isCurrent = activeEventIndex === playerEventIdx;
+                    const isPending = isCurrent ? (activeEventSubstage === 'pending') : false;
+                    const showResult = isCurrent ? (activeEventSubstage === 'result') : true;
+
+                    let collapsedState = undefined;
+                    if (!event.isFirst && isEntangled) {
+                        const firstEvent = data.executionTrace.find(e => e.type === 'MEASURE_SPIN' && e.isFirst);
+                        if (firstEvent && firstEvent.type === 'MEASURE_SPIN') {
+                            collapsedState = { angle: firstEvent.angle, resultUp: firstEvent.result };
+                        }
+                    }
+
+                    let pUp = 50;
+                    let pDown = 50;
+
+                    if (!isEntangled && event.hiddenVar !== undefined) {
+                        const normAngle = (a: number) => {
+                            let res = a % 360;
+                            if (res < 0) res += 360;
+                            return res;
+                        };
+                        const angle = normAngle(event.angle);
+                        const particleHiddenVar = player === 'alice' ? normAngle(event.hiddenVar) : normAngle(event.hiddenVar + 180);
+                        let diff = Math.abs(angle - particleHiddenVar);
+                        if (diff > 180) diff = 360 - diff;
+                        const isUp = diff <= 90;
+                        pUp = isUp ? 100 : 0;
+                        pDown = isUp ? 0 : 100;
+                    } else if (isEntangled && !event.isFirst && collapsedState) {
+                        const diffRad = (collapsedState.angle - event.angle) * (Math.PI / 180);
+                        const probSame = Math.pow(Math.cos(diffRad), 2);
+                        if (collapsedState.resultUp) {
+                            pUp = probSame * 100;
+                            pDown = (1 - probSame) * 100;
+                        } else {
+                            pUp = (1 - probSame) * 100;
+                            pDown = probSame * 100;
+                        }
+                    }
+
+                    return (
+                        <div className={`quantum-overlay ${showResult ? 'measured' : 'pending'} ${!isEntangled ? 'no-ent-overlay' : ''}`} style={{ left: hasProb ? '250px' : '230px' }}>
+                            {renderUnitCircle(event.angle, isPending, showResult, event.result, collapsedState, !isEntangled ? event.hiddenVar : undefined, player === 'alice')}
+                            <div className="quantum-prob">↑: {pUp.toFixed(0)}% | ↓: {pDown.toFixed(0)}%</div>
+                            <div className="quantum-spin-result">{showResult ? (event.result ? '↑ (Up)' : '↓ (Down)') : '?'}</div>
+                            <div className="quantum-status-text">{isPending ? 'Measuring' : 'Measured'} at {event.angle.toFixed(0)}°</div>
+                        </div>
+                    );
+                }
             }
         }
 
@@ -561,9 +596,163 @@ export const SimulationDashboard: React.FC<Props> = ({
     const renderAnimationArea = (data: RoundResult | null, isEntangled: boolean) => {
         let mathText: React.ReactNode = <span style={{ color: 'var(--text-muted)' }}>Waiting for round to begin...</span>;
 
-        if (data?.quantumDetails) {
-            // Placeholder for live explanation text
-            mathText = "Live explaining to be added later";
+        if (data) {
+            if (currentStage === 'generating-pair') {
+                mathText = (
+                    <div>
+                        {isEntangled ? 'A maximally entangled pair of particles is generated.' : 'A pre-determined hidden variable spin is generated.'}
+                    </div>
+                );
+            } else if (currentStage === 'sending') {
+                mathText = (
+                    <div>
+                        The computer sends <strong style={{ color: 'var(--quantum-pink)' }}>{data.x}</strong> to Alice and <strong style={{ color: 'var(--accent-teal)' }}>{data.y}</strong> to Bob.
+                    </div>
+                );
+            } else if (currentStage === 'executing' && activeEventIndex >= 0 && data.executionTrace) {
+                const event = data.executionTrace[activeEventIndex];
+                if (event) {
+                    const playerName = event.player === 'alice' ? 'Alice' : 'Bob';
+                    const playerColor = event.player === 'alice' ? 'var(--quantum-pink)' : 'var(--accent-teal)';
+                    const isPending = activeEventSubstage === 'pending';
+
+                    if (event.type === 'PROB') {
+                        mathText = (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                <div>
+                                    <strong style={{ color: playerColor }}>{playerName}</strong> performs a probability check with <strong>{event.prob}%</strong> chance.
+                                </div>
+                                {!isPending && (
+                                    <div style={{ color: event.result ? '#00f59f' : '#ff4444', fontWeight: 'bold' }}>
+                                        Result: {event.result ? 'Success' : 'Failure'}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    } else if (event.type === 'MEASURE_SPIN') {
+                        let secondLine: React.ReactNode = null;
+                        if (!isPending) {
+                            if (isEntangled) {
+                                if (event.isFirst) {
+                                    secondLine = (
+                                        <div style={{ color: '#00f59f', fontWeight: 'bold' }}>
+                                            Outcome: {event.result ? '↑ Up' : '↓ Down'} <span style={{ fontWeight: 'normal', color: '#e0e0e0' }}>(collapses the quantum link)</span>
+                                        </div>
+                                    );
+                                } else {
+                                    secondLine = (
+                                        <div style={{ color: '#00f59f', fontWeight: 'bold' }}>
+                                            Outcome: {event.result ? '↑ Up' : '↓ Down'} <span style={{ fontWeight: 'normal', color: '#e0e0e0' }}>(correlated with Alice\'s result)</span>
+                                        </div>
+                                    );
+                                }
+                            } else {
+                                secondLine = (
+                                    <div style={{ color: '#00f59f', fontWeight: 'bold' }}>
+                                        Outcome: {event.result ? '↑ Up' : '↓ Down'} <span style={{ fontWeight: 'normal', color: '#e0e0e0' }}>(pre-determined by the hidden variable spin)</span>
+                                    </div>
+                                );
+                            }
+                        }
+
+                        mathText = (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                <div>
+                                    <strong style={{ color: playerColor }}>{playerName}</strong> measures their spin at <strong>{event.angle.toFixed(0)}°</strong>.
+                                </div>
+                                {secondLine}
+                            </div>
+                        );
+                    }
+                }
+            } else if (currentStage === 'returning') {
+                mathText = (
+                    <div>
+                        Alice outputs <strong style={{ color: 'var(--quantum-pink)' }}>{data.outA ? 1 : 0}</strong> and Bob outputs <strong style={{ color: 'var(--accent-teal)' }}>{data.outB ? 1 : 0}</strong>. They return their answers to the computer.
+                    </div>
+                );
+            } else if (currentStage === 'result') {
+                const target = data.x * data.y;
+                const actual = data.outA !== data.outB ? 1 : 0;
+                mathText = (
+                    <div>
+                        <div>
+                            Target: <strong>x · y = {target}</strong> | Output: <strong>a ⊕ b = {actual}</strong>
+                        </div>
+                        <div style={{ marginTop: '0.5rem', color: data.win ? '#00f59f' : '#ff4444', fontWeight: 'bold', fontSize: '1rem' }}>
+                            {data.win ? 'SUCCESS: Targets match!' : 'FAILURE: Targets do not match!'}
+                        </div>
+                    </div>
+                );
+            }
+        }
+
+        let aliceProbAnimation: React.ReactNode = null;
+        let bobProbAnimation: React.ReactNode = null;
+
+        if (data && data.executionTrace) {
+            let hasAliceSpin = false;
+            let hasBobSpin = false;
+            if (mode === 'quantum') {
+                const aliceSpinIdx = data.executionTrace.findIndex(e => e.type === 'MEASURE_SPIN' && e.player === 'alice');
+                const bobSpinIdx = data.executionTrace.findIndex(e => e.type === 'MEASURE_SPIN' && e.player === 'bob');
+                if (aliceSpinIdx !== -1 && currentStage === 'executing' && activeEventIndex >= aliceSpinIdx) {
+                    hasAliceSpin = true;
+                }
+                if (bobSpinIdx !== -1 && currentStage === 'executing' && activeEventIndex >= bobSpinIdx) {
+                    hasBobSpin = true;
+                }
+            }
+
+            let maxSearchIdx = data.executionTrace.length - 1;
+            if (currentStage === 'executing') {
+                maxSearchIdx = activeEventIndex;
+            } else if (
+                currentStage === 'ready' ||
+                currentStage === 'generating-pair' ||
+                currentStage === 'sending' ||
+                currentStage === 'returning' ||
+                currentStage === 'result'
+            ) {
+                maxSearchIdx = -1;
+            }
+            for (let i = maxSearchIdx; i >= 0; i--) {
+                const event = data.executionTrace[i];
+                if (event && event.type === 'PROB' && event.player === 'alice') {
+                    const isCurrent = currentStage === 'executing' && activeEventIndex === i;
+                    const isPending = isCurrent ? activeEventSubstage === 'pending' : false;
+                    const duration = isPending ? baseDelay * 0.8 : 0;
+                    aliceProbAnimation = (
+                        <ProbabilityAnimation
+                            prob={event.prob}
+                            result={event.result}
+                            duration={duration}
+                            randVal={event.randVal}
+                            style={hasAliceSpin ? { left: '150px' } : undefined}
+                        />
+                    );
+                    break;
+                }
+            }
+
+            for (let i = maxSearchIdx; i >= 0; i--) {
+                const event = data.executionTrace[i];
+                if (event && event.type === 'PROB' && event.player === 'bob') {
+                    const isCurrent = currentStage === 'executing' && activeEventIndex === i;
+                    const isPending = isCurrent ? activeEventSubstage === 'pending' : false;
+                    const duration = isPending ? baseDelay * 0.8 : 0;
+                    bobProbAnimation = (
+                        <ProbabilityAnimation
+                            prob={event.prob}
+                            result={event.result}
+                            duration={duration}
+                            randVal={event.randVal}
+                            style={hasBobSpin ? { left: '150px' } : undefined}
+                        />
+                    );
+                    break;
+                }
+            }
         }
 
         return (
@@ -595,37 +784,37 @@ export const SimulationDashboard: React.FC<Props> = ({
                         const hiddenVarEvent = data.executionTrace?.find(e => e.type === 'MEASURE_SPIN' && e.isFirst);
                         const hiddenVar = hiddenVarEvent?.type === 'MEASURE_SPIN' ? hiddenVarEvent.hiddenVar : 0;
                         return (
-                        <div className="hidden-var-subwindow glass-panel" style={{ position: 'absolute', right: '40px', bottom: '-2px', padding: '0.75rem', display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 10, background: 'rgba(11, 15, 25, 0.95)', border: '1px solid var(--glass-border)', borderRadius: '8px', boxShadow: '0 4px 15px rgba(0, 0, 0, 0.6)' }}>
-                            <div style={{ marginBottom: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>
-                                Hidden Variables
-                            </div>
-                            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                    <svg width="40" height="40" viewBox="-50 -50 100 100" style={{ overflow: 'visible' }}>
-                                        <circle cx="0" cy="0" r="40" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
-                                        <g className="spinning-hidden-var" style={{ '--target-angle': `${-(hiddenVar || 0)}deg` } as React.CSSProperties}>
-                                            <path d="M 0,-40 A 40,40 0 0,1 0,40 Z" fill="rgba(0, 255, 159, 0.15)" stroke="rgba(0, 255, 159, 0.3)" strokeDasharray="2 2" />
-                                            <path d="M 0,40 A 40,40 0 0,1 0,-40 Z" fill="rgba(255, 68, 68, 0.15)" stroke="rgba(255, 68, 68, 0.3)" strokeDasharray="2 2" />
-                                            <line x1="-40" y1="0" x2="35" y2="0" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="1.5" strokeDasharray="2 2" />
-                                            <polygon points="35,-5 45,0 35,5" fill="#fff" />
-                                        </g>
-                                    </svg>
-                                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Alice</div>
+                            <div className="hidden-var-subwindow glass-panel" style={{ position: 'absolute', right: '40px', bottom: '-2px', padding: '0.75rem', display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 10, background: 'rgba(11, 15, 25, 0.95)', border: '1px solid var(--glass-border)', borderRadius: '8px', boxShadow: '0 4px 15px rgba(0, 0, 0, 0.6)' }}>
+                                <div style={{ marginBottom: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>
+                                    Hidden Variables
                                 </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                    <svg width="40" height="40" viewBox="-50 -50 100 100" style={{ overflow: 'visible' }}>
-                                        <circle cx="0" cy="0" r="40" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
-                                        <g className="spinning-hidden-var" style={{ '--target-angle': `${-((hiddenVar || 0) + 180)}deg` } as React.CSSProperties}>
-                                            <path d="M 0,-40 A 40,40 0 0,1 0,40 Z" fill="rgba(0, 255, 159, 0.15)" stroke="rgba(0, 255, 159, 0.3)" strokeDasharray="2 2" />
-                                            <path d="M 0,40 A 40,40 0 0,1 0,-40 Z" fill="rgba(255, 68, 68, 0.15)" stroke="rgba(255, 68, 68, 0.3)" strokeDasharray="2 2" />
-                                            <line x1="-40" y1="0" x2="35" y2="0" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="1.5" strokeDasharray="2 2" />
-                                            <polygon points="35,-5 45,0 35,5" fill="#fff" />
-                                        </g>
-                                    </svg>
-                                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Bob</div>
+                                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                        <svg width="40" height="40" viewBox="-50 -50 100 100" style={{ overflow: 'visible' }}>
+                                            <circle cx="0" cy="0" r="40" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
+                                            <g className="spinning-hidden-var" style={{ '--target-angle': `${-(hiddenVar || 0)}deg` } as React.CSSProperties}>
+                                                <path d="M 0,-40 A 40,40 0 0,1 0,40 Z" fill="rgba(0, 255, 159, 0.15)" stroke="rgba(0, 255, 159, 0.3)" strokeDasharray="2 2" />
+                                                <path d="M 0,40 A 40,40 0 0,1 0,-40 Z" fill="rgba(255, 68, 68, 0.15)" stroke="rgba(255, 68, 68, 0.3)" strokeDasharray="2 2" />
+                                                <line x1="-40" y1="0" x2="35" y2="0" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="1.5" strokeDasharray="2 2" />
+                                                <polygon points="35,-5 45,0 35,5" fill="#fff" />
+                                            </g>
+                                        </svg>
+                                        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Alice</div>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                        <svg width="40" height="40" viewBox="-50 -50 100 100" style={{ overflow: 'visible' }}>
+                                            <circle cx="0" cy="0" r="40" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
+                                            <g className="spinning-hidden-var" style={{ '--target-angle': `${-((hiddenVar || 0) + 180)}deg` } as React.CSSProperties}>
+                                                <path d="M 0,-40 A 40,40 0 0,1 0,40 Z" fill="rgba(0, 255, 159, 0.15)" stroke="rgba(0, 255, 159, 0.3)" strokeDasharray="2 2" />
+                                                <path d="M 0,40 A 40,40 0 0,1 0,-40 Z" fill="rgba(255, 68, 68, 0.15)" stroke="rgba(255, 68, 68, 0.3)" strokeDasharray="2 2" />
+                                                <line x1="-40" y1="0" x2="35" y2="0" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="1.5" strokeDasharray="2 2" />
+                                                <polygon points="35,-5 45,0 35,5" fill="#fff" />
+                                            </g>
+                                        </svg>
+                                        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Bob</div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
                         );
                     })()}
 
@@ -635,14 +824,8 @@ export const SimulationDashboard: React.FC<Props> = ({
                             {data && currentStage !== 'sending' && currentStage !== 'ready' && (
                                 <div className="bit static-on-alice">{data.x}</div>
                             )}
-                            {currentStage === 'executing' && activeEventIndex >= 0 && data?.executionTrace?.[activeEventIndex]?.type === 'PROB' && data.executionTrace[activeEventIndex].player === 'alice' && (
-                                <ProbabilityAnimation 
-                                    prob={(data.executionTrace[activeEventIndex] as any).prob}
-                                    result={(data.executionTrace[activeEventIndex] as any).result}
-                                    duration={baseDelay * 1.5}
-                                />
-                            )}
-                            {renderQuantumOverlay('alice', data, isEntangled)}
+                            {aliceProbAnimation}
+                            {renderQuantumOverlay('alice', data, isEntangled, !!aliceProbAnimation)}
                         </div>
 
                         {mode === 'quantum' && (
@@ -656,14 +839,8 @@ export const SimulationDashboard: React.FC<Props> = ({
                             {data && currentStage !== 'sending' && currentStage !== 'ready' && (
                                 <div className="bit static-on-bob">{data.y}</div>
                             )}
-                            {currentStage === 'executing' && activeEventIndex >= 0 && data?.executionTrace?.[activeEventIndex]?.type === 'PROB' && data.executionTrace[activeEventIndex].player === 'bob' && (
-                                <ProbabilityAnimation 
-                                    prob={(data.executionTrace[activeEventIndex] as any).prob}
-                                    result={(data.executionTrace[activeEventIndex] as any).result}
-                                    duration={baseDelay * 1.5}
-                                />
-                            )}
-                            {renderQuantumOverlay('bob', data, isEntangled)}
+                            {bobProbAnimation}
+                            {renderQuantumOverlay('bob', data, isEntangled, !!bobProbAnimation)}
                         </div>
                     </div>
 
@@ -741,7 +918,7 @@ export const SimulationDashboard: React.FC<Props> = ({
                                 <div className="finished-stat-grid">
                                     <div className="stat-box">
                                         <span className="stat-label">Success Rate</span>
-                                        <span className="stat-value" style={{ color: 'var(--text-muted)' }}>{round > 0 ? (noEntWins / round * 100).toFixed(2) : '0.00'}%</span>
+                                        <span className="stat-value" style={{ color: 'var(--text-muted)' }}>{noEntSuccessRate}%</span>
                                     </div>
                                     <div className="stat-box">
                                         <span className="stat-label">Total Rounds</span>
@@ -774,142 +951,149 @@ export const SimulationDashboard: React.FC<Props> = ({
                     </div>
                 </div>
             ) : (
-                <div className="dashboard-content">
-                    <div className="left-column" style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div className="dashboard-content-rows" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', flex: 1, minHeight: 0 }}>
+                    {/* Top Row: True Entanglement Sim/Graph & Controls/Rules */}
+                    <div style={{ display: 'flex', gap: '1.5rem', flex: 1, minHeight: 0 }}>
+                        {/* Left Top Column: Controls & True Entanglement Simulation */}
+                        <div style={{ flex: 1.6, display: 'flex', flexDirection: 'column', gap: '1.5rem', minWidth: 0 }}>
+                            <div className="pane glass-panel controls-window" style={{ padding: '1rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div className="turn-counter" style={{ position: 'static' }}>Turn {round} / {nGames}</div>
+                                <div className="controls" style={{ margin: 0 }}>
+                                    <button onClick={() => setPlayState(p => p === 'playing' ? 'paused' : 'playing')}>
+                                        {playState === 'playing' ? '⏸ Pause' : '▶ Play'}
+                                    </button>
+                                    <button onClick={() => setSpeed(s => s === 1 ? 2 : s === 2 ? 5 : s === 5 ? 10 : s === 10 ? 50 : s === 50 ? 100 : s === 100 ? 1000 : 1)}>
+                                        Speed: {speed}x
+                                    </button>
+                                    <button onClick={skipToEnd}>⏭ Skip to End</button>
+                                </div>
+                            </div>
 
-                        <div className="pane glass-panel controls-window" style={{ padding: '1rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div className="turn-counter" style={{ position: 'static' }}>Turn {round} / {nGames}</div>
-                            <div className="controls" style={{ margin: 0 }}>
-                                <button onClick={() => setPlayState(p => p === 'playing' ? 'paused' : 'playing')}>
-                                    {playState === 'playing' ? '⏸ Pause' : '▶ Play'}
-                                </button>
-                                <button onClick={() => setSpeed(s => s === 1 ? 2 : s === 2 ? 5 : s === 5 ? 10 : s === 10 ? 50 : s === 50 ? 100 : 1)}>
-                                    Speed: {speed}x
-                                </button>
-                                <button onClick={skipToEnd}>⏭ Skip to End</button>
+                            <div className="pane glass-panel" style={{ position: 'relative', display: 'flex', flexDirection: 'column', padding: '1.5rem', flex: 1, minHeight: 0 }}>
+                                {mode === 'quantum' && <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--quantum-pink)' }}>True Entanglement</h3>}
+                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                                    {renderAnimationArea(roundData, true)}
+                                </div>
                             </div>
                         </div>
 
-                        <div className="pane glass-panel" style={{ position: 'relative', display: 'flex', flexDirection: 'column', padding: '1.5rem', flex: 1 }}>
-                            {mode === 'quantum' && <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--quantum-pink)' }}>True Entanglement</h3>}
-
-                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                {renderAnimationArea(roundData, true)}
+                        {/* Right Top Column: Rules & True Entanglement Graph */}
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem', minWidth: 0 }}>
+                            <div className="pane glass-panel rules-pane">
+                                <h3>Score Rules</h3>
+                                <table className="rules-table">
+                                    <thead>
+                                        <tr>
+                                            <th title="Alice's Input">A</th>
+                                            <th title="Bob's Input">B</th>
+                                            <th style={{ whiteSpace: 'nowrap' }}>Target</th>
+                                            {mode === 'quantum' && compareClassical && <th style={{ color: 'var(--quantum-pink)' }}>True Entanglement</th>}
+                                            <th style={mode === 'quantum' && compareClassical ? { color: 'var(--text-muted)' } : {}}>{mode === 'quantum' && compareClassical ? 'Hidden Variable' : 'Result'}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr className={getRowClass(0, 0)}>
+                                            <td>0</td>
+                                            <td>0</td>
+                                            <td style={{ whiteSpace: 'nowrap' }}>A == B</td>
+                                            {mode === 'quantum' && compareClassical && <td>{renderColResult(0, 0, roundData)}</td>}
+                                            <td>{renderColResult(0, 0, mode === 'quantum' && compareClassical ? noEntRoundData : roundData, mode === 'quantum' && compareClassical)}</td>
+                                        </tr>
+                                        <tr className={getRowClass(0, 1)}>
+                                            <td>0</td>
+                                            <td>1</td>
+                                            <td style={{ whiteSpace: 'nowrap' }}>A == B</td>
+                                            {mode === 'quantum' && compareClassical && <td>{renderColResult(0, 1, roundData)}</td>}
+                                            <td>{renderColResult(0, 1, mode === 'quantum' && compareClassical ? noEntRoundData : roundData, mode === 'quantum' && compareClassical)}</td>
+                                        </tr>
+                                        <tr className={getRowClass(1, 0)}>
+                                            <td>1</td>
+                                            <td>0</td>
+                                            <td style={{ whiteSpace: 'nowrap' }}>A == B</td>
+                                            {mode === 'quantum' && compareClassical && <td>{renderColResult(1, 0, roundData)}</td>}
+                                            <td>{renderColResult(1, 0, mode === 'quantum' && compareClassical ? noEntRoundData : roundData, mode === 'quantum' && compareClassical)}</td>
+                                        </tr>
+                                        <tr className={getRowClass(1, 1)}>
+                                            <td>1</td>
+                                            <td>1</td>
+                                            <td style={{ whiteSpace: 'nowrap' }}>A != B</td>
+                                            {mode === 'quantum' && compareClassical && <td>{renderColResult(1, 1, roundData)}</td>}
+                                            <td>{renderColResult(1, 1, mode === 'quantum' && compareClassical ? noEntRoundData : roundData, mode === 'quantum' && compareClassical)}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
-                        </div>
 
-                        {mode === 'quantum' && compareClassical && (
-                            <div className="pane glass-panel no-ent-live-window" style={{ position: 'relative', display: 'flex', flexDirection: 'column', padding: '1.5rem', flex: 1 }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                    <h4 style={{ margin: 0, color: 'var(--text-muted)' }}>Hidden Variable</h4>
-                                </div>
-                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    {renderAnimationArea(noEntRoundData, false)}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="right-panes">
-                        <div className="pane glass-panel rules-pane">
-                            <h3>Score Rules</h3>
-                            <table className="rules-table">
-                                <thead>
-                                    <tr>
-                                        <th title="Alice's Input">A</th>
-                                        <th title="Bob's Input">B</th>
-                                        <th style={{ whiteSpace: 'nowrap' }}>Target</th>
-                                        {mode === 'quantum' && compareClassical && <th style={{ color: 'var(--quantum-pink)' }}>True Entanglement</th>}
-                                        <th style={mode === 'quantum' && compareClassical ? { color: 'var(--text-muted)' } : {}}>{mode === 'quantum' && compareClassical ? 'Hidden Variable' : 'Result'}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr className={getRowClass(0, 0)}>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td style={{ whiteSpace: 'nowrap' }}>A == B</td>
-                                        {mode === 'quantum' && compareClassical && <td>{renderColResult(0, 0, roundData)}</td>}
-                                        <td>{renderColResult(0, 0, mode === 'quantum' && compareClassical ? noEntRoundData : roundData, mode === 'quantum' && compareClassical)}</td>
-                                    </tr>
-                                    <tr className={getRowClass(0, 1)}>
-                                        <td>0</td>
-                                        <td>1</td>
-                                        <td style={{ whiteSpace: 'nowrap' }}>A == B</td>
-                                        {mode === 'quantum' && compareClassical && <td>{renderColResult(0, 1, roundData)}</td>}
-                                        <td>{renderColResult(0, 1, mode === 'quantum' && compareClassical ? noEntRoundData : roundData, mode === 'quantum' && compareClassical)}</td>
-                                    </tr>
-                                    <tr className={getRowClass(1, 0)}>
-                                        <td>1</td>
-                                        <td>0</td>
-                                        <td style={{ whiteSpace: 'nowrap' }}>A == B</td>
-                                        {mode === 'quantum' && compareClassical && <td>{renderColResult(1, 0, roundData)}</td>}
-                                        <td>{renderColResult(1, 0, mode === 'quantum' && compareClassical ? noEntRoundData : roundData, mode === 'quantum' && compareClassical)}</td>
-                                    </tr>
-                                    <tr className={getRowClass(1, 1)}>
-                                        <td>1</td>
-                                        <td>1</td>
-                                        <td style={{ whiteSpace: 'nowrap' }}>A != B</td>
-                                        {mode === 'quantum' && compareClassical && <td>{renderColResult(1, 1, roundData)}</td>}
-                                        <td>{renderColResult(1, 1, mode === 'quantum' && compareClassical ? noEntRoundData : roundData, mode === 'quantum' && compareClassical)}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div className="pane glass-panel graph-pane" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <h3 style={{ margin: 0, color: mode === 'quantum' ? 'var(--quantum-pink)' : 'white' }}>{mode === 'quantum' ? 'True Entanglement' : 'Average Success Rate'}</h3>
-                                <button
-                                    className="secondary-btn"
-                                    style={{ fontSize: '0.8rem', padding: '0.25rem 0.75rem' }}
-                                    onClick={() => setShowTheoreticalOptimum(prev => !prev)}
-                                >
-                                    {showTheoreticalOptimum ? 'Hide Theoretical Max' : 'Show Theoretical Max'}
-                                </button>
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-around', background: 'rgba(0,0,0,0.2)', padding: '0.5rem', borderRadius: '8px' }}>
-                                <div className="stat-box" style={{ padding: 0, background: 'none', border: 'none', flexDirection: 'column' }}>
-                                    <span className="stat-label">Success Rate</span>
-                                    <span className="stat-value">{successRate}%</span>
-                                </div>
-                                <div className="stat-box" style={{ padding: 0, background: 'none', border: 'none', flexDirection: 'column' }}>
-                                    <span className="stat-label">Wins</span>
-                                    <span className="stat-value">{wins}</span>
-                                </div>
-                            </div>
-                            <div style={{ flex: 1, minHeight: '150px' }}>
-                                {renderGraph(false, historyRates, theoreticalOptimum, showTheoreticalOptimum, true)}
-                            </div>
-                        </div>
-
-                        {mode === 'quantum' && compareClassical && (
-                            <div className="pane glass-panel graph-pane" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
+                            <div className="pane glass-panel graph-pane" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, minHeight: 0 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <h3 style={{ margin: 0, color: 'var(--text-muted)' }}>Hidden Variable</h3>
+                                    <h3 style={{ margin: 0, color: mode === 'quantum' ? 'var(--quantum-pink)' : 'white' }}>{mode === 'quantum' ? 'True Entanglement' : 'Average Success Rate'}</h3>
                                     <button
-                                        className="secondary-btn no-ent-btn"
+                                        className="secondary-btn"
                                         style={{ fontSize: '0.8rem', padding: '0.25rem 0.75rem' }}
-                                        onClick={() => setShowNoEntTheoreticalOptimum(prev => !prev)}
+                                        onClick={() => setShowTheoreticalOptimum(prev => !prev)}
                                     >
-                                        {showNoEntTheoreticalOptimum ? 'Hide Theoretical Max' : 'Show Theoretical Max'}
+                                        {showTheoreticalOptimum ? 'Hide Theoretical Max' : 'Show Theoretical Max'}
                                     </button>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-around', background: 'rgba(0,0,0,0.2)', padding: '0.5rem', borderRadius: '8px' }}>
                                     <div className="stat-box" style={{ padding: 0, background: 'none', border: 'none', flexDirection: 'column' }}>
                                         <span className="stat-label">Success Rate</span>
-                                        <span className="stat-value">{round > 0 ? (noEntWins / round * 100).toFixed(2) : '0.00'}%</span>
+                                        <span className="stat-value">{successRate}%</span>
                                     </div>
                                     <div className="stat-box" style={{ padding: 0, background: 'none', border: 'none', flexDirection: 'column' }}>
                                         <span className="stat-label">Wins</span>
-                                        <span className="stat-value">{noEntWins}</span>
+                                        <span className="stat-value">{wins}</span>
                                     </div>
                                 </div>
-                                <div style={{ flex: 1, minHeight: '150px' }}>
-                                    {renderGraph(false, noEntHistoryRates, noEntTheoreticalOptimum, showNoEntTheoreticalOptimum, false)}
+                                <div style={{ flex: 1, minHeight: 0 }}>
+                                    {renderGraph(false, historyRates, theoreticalOptimum, showTheoreticalOptimum, true)}
                                 </div>
                             </div>
-                        )}
+                        </div>
                     </div>
+
+                    {/* Bottom Row: Hidden Variable Sim & Graph */}
+                    {mode === 'quantum' && compareClassical && (
+                        <div style={{ display: 'flex', gap: '1.5rem', flex: 1, minHeight: 0 }}>
+                            <div style={{ flex: 1.6, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                                <div className="pane glass-panel no-ent-live-window" style={{ position: 'relative', display: 'flex', flexDirection: 'column', padding: '1.5rem', flex: 1, minHeight: 0 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                        <h4 style={{ margin: 0, color: 'var(--text-muted)' }}>Hidden Variable</h4>
+                                    </div>
+                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                                        {renderAnimationArea(noEntRoundData, false)}
+                                    </div>
+                                </div>
+                            </div>
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                                <div className="pane glass-panel graph-pane" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, minHeight: 0 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <h3 style={{ margin: 0, color: 'var(--text-muted)' }}>Hidden Variable</h3>
+                                        <button
+                                            className="secondary-btn no-ent-btn"
+                                            style={{ fontSize: '0.8rem', padding: '0.25rem 0.75rem' }}
+                                            onClick={() => setShowNoEntTheoreticalOptimum(prev => !prev)}
+                                        >
+                                            {showNoEntTheoreticalOptimum ? 'Hide Theoretical Max' : 'Show Theoretical Max'}
+                                        </button>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-around', background: 'rgba(0,0,0,0.2)', padding: '0.5rem', borderRadius: '8px' }}>
+                                        <div className="stat-box" style={{ padding: 0, background: 'none', border: 'none', flexDirection: 'column' }}>
+                                            <span className="stat-label">Success Rate</span>
+                                            <span className="stat-value">{noEntSuccessRate}%</span>
+                                        </div>
+                                        <div className="stat-box" style={{ padding: 0, background: 'none', border: 'none', flexDirection: 'column' }}>
+                                            <span className="stat-label">Wins</span>
+                                            <span className="stat-value">{noEntWins}</span>
+                                        </div>
+                                    </div>
+                                    <div style={{ flex: 1, minHeight: 0 }}>
+                                        {renderGraph(false, noEntHistoryRates, noEntTheoreticalOptimum, showNoEntTheoreticalOptimum, false)}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
