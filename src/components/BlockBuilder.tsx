@@ -20,7 +20,7 @@ const ProbInput: React.FC<ProbInputProps> = ({ value, onChange }) => {
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const raw = e.target.value;
         setLocalValue(raw);
-        
+
         let parsed = parseInt(raw);
         if (isNaN(parsed)) {
             onChange(0);
@@ -154,7 +154,7 @@ export const BlockBuilder: React.FC<Props> = ({ node, onChange }) => {
                 <div style={{ display: 'inline-block' }}>
                     <div className="block block-prob">
                         <button className="block-delete" onClick={() => onChange(null)}>✕</button>
-                        <strong>Return True with Probability of </strong>
+                        <strong>Return 1 with Probability of </strong>
                         <ProbInput
                             value={node.prob}
                             onChange={(val) => onChange({ ...node, prob: val })}

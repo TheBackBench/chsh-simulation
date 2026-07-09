@@ -84,9 +84,9 @@ export const QuantumSandbox: React.FC<Props> = ({ strategy, setStrategy, isActiv
                     <div style={{ flex: 1 }}></div>
                     <h3 style={{ margin: 0, textAlign: 'center', flex: 1 }}>Block Bank</h3>
                     <div style={{ flex: 1, textAlign: 'right' }}>
-                        <button 
-                            className="secondary-btn" 
-                            onClick={loadOptimal} 
+                        <button
+                            className="secondary-btn"
+                            onClick={loadOptimal}
                             title={`Builds the optimal strategy that achieves\nthe maximum possible success rate`}
                             style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}
                         >
@@ -102,8 +102,8 @@ export const QuantumSandbox: React.FC<Props> = ({ strategy, setStrategy, isActiv
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
                             <DraggableBlock type="IF_ELSE" label="If / Else" className="block-if" title="Branches based on condition" />
                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                                <DraggableBlock type="RETURN_TRUE" label="Return True" className="block-action" title="Returns True (1) and ends turn" />
-                                <DraggableBlock type="RETURN_FALSE" label="Return False" className="block-action" title="Returns False (0) and ends turn" />
+                                <DraggableBlock type="RETURN_TRUE" label="Return 1" className="block-action" title="Returns 1 and ends turn" />
+                                <DraggableBlock type="RETURN_FALSE" label="Return 0" className="block-action" title="Returns 0 and ends turn" />
                             </div>
                         </div>
                     </div>
@@ -112,7 +112,7 @@ export const QuantumSandbox: React.FC<Props> = ({ strategy, setStrategy, isActiv
                         <h4 style={{ margin: '0 0 0.75rem 0', color: 'var(--quantum-pink)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem', textAlign: 'center' }}>Condition Blocks</h4>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                                <DraggableBlock type="MEASURE_SPIN_COND" label="Spin" className="block-condition quantum-action" title="Checks whether the spin at a certain angle is up or down and returns true (1) or false (0) accordingly" />
+                                <DraggableBlock type="MEASURE_SPIN_COND" label="Spin" className="block-condition quantum-action" title="Checks whether the spin at a certain angle is up or down and returns 1 or 0 accordingly" />
                                 <DraggableBlock type="PROB_COND" label="Probability" className="block-condition quantum-action" title="Evaluates to True with specified probability" />
                             </div>
                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -143,8 +143,8 @@ export const QuantumSandbox: React.FC<Props> = ({ strategy, setStrategy, isActiv
                             value={strategy.aliceDefault ? 'true' : 'false'}
                             onChange={(e) => setStrategy(prev => ({ ...prev, aliceDefault: e.target.value === 'true' }))}
                         >
-                            <option value="true">Return True</option>
-                            <option value="false">Return False</option>
+                            <option value="true">Return 1</option>
+                            <option value="false">Return 0</option>
                         </select>
                     </div>
                 </div>
@@ -172,8 +172,8 @@ export const QuantumSandbox: React.FC<Props> = ({ strategy, setStrategy, isActiv
                             value={strategy.bobDefault ? 'true' : 'false'}
                             onChange={(e) => setStrategy(prev => ({ ...prev, bobDefault: e.target.value === 'true' }))}
                         >
-                            <option value="true">Return True</option>
-                            <option value="false">Return False</option>
+                            <option value="true">Return 1</option>
+                            <option value="false">Return 0</option>
                         </select>
                     </div>
                 </div>
