@@ -14,7 +14,7 @@ function App() {
     const [nGames, setNGames] = useState<number | ''>(1000);
     const [evaluationOrder, setEvaluationOrder] = useState<'alice' | 'bob' | 'random'>('random');
     const [isAnimating, setIsAnimating] = useState(false);
-    const [compareClassical, setCompareClassical] = useState(false);
+    const compareClassical = true;
 
     const [classicalStrategy, setClassicalStrategy] = useState<ClassicalStrategy>({
         alice: null,
@@ -160,20 +160,6 @@ function App() {
                                     <option value="random">Random (Per Game)</option>
                                 </select>
                             </div>
-                            {mode === 'quantum' && (
-                                <div className="input-group inline" style={{ display: 'flex', alignItems: 'center' }}>
-                                    <label htmlFor="compare-classical" style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', margin: 0 }}>
-                                        <input
-                                            type="checkbox"
-                                            id="compare-classical"
-                                            checked={compareClassical}
-                                            onChange={(e) => setCompareClassical(e.target.checked)}
-                                            style={{ marginRight: '8px', cursor: 'pointer' }}
-                                        />
-                                        Compare to Hidden Variable
-                                    </label>
-                                </div>
-                            )}
                             <button
                                 className={`run-btn ${mode === 'quantum' ? 'quantum' : ''}`}
                                 onClick={handleRun}

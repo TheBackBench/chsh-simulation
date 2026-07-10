@@ -403,50 +403,47 @@
     background: var(--accent-teal-dim);
     color: var(--accent-teal);
     font-weight: bold;
-    border-top: 2px solid var(--accent-teal) !important;
-    border-bottom: 2px solid var(--accent-teal) !important;
     position: relative;
     z-index: 1;
+    box-shadow: inset 0 2px 0 var(--accent-teal), inset 0 -2px 0 var(--accent-teal);
 }
 
 .rules-table tr.active-row td:first-child {
-    border-left: 3px solid var(--accent-teal) !important;
+    box-shadow: inset 3px 0 0 var(--accent-teal), inset 0 2px 0 var(--accent-teal), inset 0 -2px 0 var(--accent-teal);
 }
 
 .rules-table tr.active-row td:last-child {
-    border-right: 2px solid var(--accent-teal) !important;
+    box-shadow: inset -2px 0 0 var(--accent-teal), inset 0 2px 0 var(--accent-teal), inset 0 -2px 0 var(--accent-teal);
 }
 
 /* Success Highlight */
 .rules-table tr.active-row.win td {
     background: rgba(16, 185, 129, 0.2);
     color: var(--win-green);
-    border-top: 2px solid var(--win-green) !important;
-    border-bottom: 2px solid var(--win-green) !important;
+    box-shadow: inset 0 2px 0 var(--win-green), inset 0 -2px 0 var(--win-green);
 }
 
 .rules-table tr.active-row.win td:first-child {
-    border-left: 3px solid var(--win-green) !important;
+    box-shadow: inset 3px 0 0 var(--win-green), inset 0 2px 0 var(--win-green), inset 0 -2px 0 var(--win-green);
 }
 
 .rules-table tr.active-row.win td:last-child {
-    border-right: 2px solid var(--win-green) !important;
+    box-shadow: inset -2px 0 0 var(--win-green), inset 0 2px 0 var(--win-green), inset 0 -2px 0 var(--win-green);
 }
 
 /* Failure Highlight */
 .rules-table tr.active-row.loss td {
     background: rgba(239, 68, 68, 0.2);
     color: var(--loss-red);
-    border-top: 2px solid var(--loss-red) !important;
-    border-bottom: 2px solid var(--loss-red) !important;
+    box-shadow: inset 0 2px 0 var(--loss-red), inset 0 -2px 0 var(--loss-red);
 }
 
 .rules-table tr.active-row.loss td:first-child {
-    border-left: 3px solid var(--loss-red) !important;
+    box-shadow: inset 3px 0 0 var(--loss-red), inset 0 2px 0 var(--loss-red), inset 0 -2px 0 var(--loss-red);
 }
 
 .rules-table tr.active-row.loss td:last-child {
-    border-right: 2px solid var(--loss-red) !important;
+    box-shadow: inset -2px 0 0 var(--loss-red), inset 0 2px 0 var(--loss-red), inset 0 -2px 0 var(--loss-red);
 }
 
 .stats-pane {

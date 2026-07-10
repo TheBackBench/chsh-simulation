@@ -452,8 +452,7 @@ export const SimulationDashboard: React.FC<Props> = ({
 
     const getRowClass = (rowX: number, rowY: number) => {
         if (!roundData || roundData.x !== rowX || roundData.y !== rowY) return '';
-        if (currentStage === 'result') {
-            if (mode === 'quantum') return 'active-row';
+        if (currentStage === 'result' && mode === 'classical') {
             return roundData.win ? 'active-row win' : 'active-row loss';
         }
         return 'active-row';
@@ -600,7 +599,11 @@ export const SimulationDashboard: React.FC<Props> = ({
             if (currentStage === 'generating-pair') {
                 mathText = (
                     <div>
-                        {isEntangled ? 'A maximally entangled pair of particles is generated.' : 'A pre-determined hidden variable spin is generated.'}
+                        {mode === 'classical' 
+                            ? 'Random inputs (x and y) are generated for Alice and Bob.' 
+                            : (isEntangled 
+                                ? 'A maximally entangled pair of particles is generated.' 
+                                : 'A pre-determined hidden variable spin is generated.')}
                     </div>
                 );
             } else if (currentStage === 'sending') {
@@ -821,7 +824,7 @@ export const SimulationDashboard: React.FC<Props> = ({
                     <div className="players">
                         <div className="player-node alice">
                             👩 Alice
-                            {data && currentStage !== 'sending' && currentStage !== 'ready' && (
+                            {data && (currentStage === 'executing' || currentStage === 'returning' || currentStage === 'result') && (
                                 <div className="bit static-on-alice">{data.x}</div>
                             )}
                             {aliceProbAnimation}
@@ -836,7 +839,7 @@ export const SimulationDashboard: React.FC<Props> = ({
 
                         <div className="player-node bob">
                             👨 Bob
-                            {data && currentStage !== 'sending' && currentStage !== 'ready' && (
+                            {data && (currentStage === 'executing' || currentStage === 'returning' || currentStage === 'result') && (
                                 <div className="bit static-on-bob">{data.y}</div>
                             )}
                             {bobProbAnimation}
@@ -922,11 +925,11 @@ export const SimulationDashboard: React.FC<Props> = ({
                                     </div>
                                     <div className="stat-box">
                                         <span className="stat-label">Total Rounds</span>
-                                        <span className="stat-value" style={{ color: 'var(--text-muted)' }}>{nGames}</span>
+                                        <span className="stat-value" style={{ color: '#fff' }}>{nGames}</span>
                                     </div>
                                     <div className="stat-box">
                                         <span className="stat-label">Wins</span>
-                                        <span className="stat-value" style={{ color: 'var(--text-muted)' }}>{noEntWins}</span>
+                                        <span className="stat-value" style={{ color: '#fff' }}>{noEntWins}</span>
                                     </div>
                                 </div>
                             </div>
@@ -972,7 +975,7 @@ export const SimulationDashboard: React.FC<Props> = ({
                             <div className="pane glass-panel" style={{ position: 'relative', display: 'flex', flexDirection: 'column', padding: '1.5rem', flex: 1, minHeight: 0 }}>
                                 {mode === 'quantum' && <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--quantum-pink)' }}>True Entanglement</h3>}
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                                    {renderAnimationArea(roundData, true)}
+                                    {renderAnimationArea(roundData, mode === 'quantum')}
                                 </div>
                             </div>
                         </div>
