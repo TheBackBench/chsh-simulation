@@ -1,5 +1,4 @@
 import React from 'react';
-import { InteractiveComparison } from './InteractiveComparison';
 
 interface Props {
     isActive: boolean;
@@ -198,22 +197,19 @@ export const Theory: React.FC<Props> = ({ isActive }) => {
                         The measured quantum correlation, 2.828, strictly exceeds the absolute classical limit of 2.
                     </p>
                     <p style={{ marginTop: '1rem' }}>
-                        The particles coordinate their answers in a way that is algebraically impossible for any pre-written, independent instruction set. This mathematical violation forces us to abandon at least one pillar of classical physics. To accept the 2√2 outcome, one must surrender:
+                        Because the quantum result mathematically violates the classical boundary, Bell's Theorem proves that no theory can reproduce quantum predictions while keeping all of the following assumptions together:
                     </p>
-                    <ol style={{ marginTop: '0.5rem', paddingLeft: '2.5rem' }}>
-                        <li><strong>Realism:</strong> Acknowledge that particles do not possess definite states prior to measurement (the Copenhagen interpretation).</li>
-                        <li><strong>Locality:</strong> Acknowledge that an action in one location instantly dictates the state of a distant particle, defying the speed of light (Bohmian mechanics).</li>
-                    </ol>
-                    <p style={{ marginTop: '1.5rem', fontStyle: 'italic', color: 'var(--text-muted)' }}>
-                        The CHSH game proves that a comfortable, local, clockwork universe is mathematically incompatible with observed reality.
+                    <ul style={{ marginTop: '0.5rem', paddingLeft: '2.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <li><strong>Local causality:</strong> what happens at Alice cannot be influenced by Bob's distant setting or result.</li>
+                        <li><strong>Measurement independence:</strong> the hidden variables are statistically independent of Alice's and Bob's supposedly free choices of settings.</li>
+                        <li><strong>A single, observer-independent outcome:</strong> each measurement has one definite result.</li>
+                    </ul>
+                    <p style={{ marginTop: '1.5rem' }}>
+                        The conclusion is that <strong>Local causality + measurement independence + quantum predictions cannot all hold</strong>.
                     </p>
-
-                    <h3 style={{ color: 'var(--accent-teal)', marginTop: '3rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Interactive Visualization: LHV vs True Entanglement</h3>
-                    <p style={{ marginTop: '1rem', marginBottom: '2rem' }}>
-                        Interact with the models below to see how Local Hidden Variables produce linear probabilities (due to overlapping regions in the hidden variable space), while Quantum Entanglement produces trigonometric probabilities (due to the geometric projection of states).
+                    <p style={{ marginTop: '1.5rem' }}>
+                        To resolve this paradox, there exist different interpretations of quantum mechanics, and each one is forced to give up on at least one of these intuitive assumptions.
                     </p>
-                    
-                    <InteractiveComparison />
                 </div>
             </div>
         </section>

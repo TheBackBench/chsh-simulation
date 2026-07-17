@@ -1,0 +1,140 @@
+.walkthrough-container {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+    padding: 2rem 1rem;
+}
+
+.walkthrough-section {
+    padding: 2.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.walkthrough-section h2 {
+    color: var(--accent-teal);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+}
+
+.walkthrough-text {
+    line-height: 1.8;
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.walkthrough-text p {
+    margin-bottom: 1.5rem;
+}
+
+.rhetorical-q {
+    font-size: 1.25rem;
+    color: var(--accent-gold);
+    font-style: italic;
+    margin: 2rem 0 1rem 0;
+    text-align: center;
+}
+
+.interactive-box {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 2rem;
+    margin: 2rem 0;
+}
+
+.interactive-box.highlight {
+    border-color: var(--accent-teal);
+    box-shadow: 0 0 20px rgba(0, 255, 159, 0.1);
+}
+
+/* Specific elements for interactives */
+.lightning-effect {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 2px;
+    background: var(--accent-gold);
+    box-shadow: 0 0 10px var(--accent-gold), 0 0 20px var(--accent-gold);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 10;
+}
+
+@keyframes strike {
+    0% { opacity: 0; transform: translate(-50%, -50%) scaleX(0); }
+    10% { opacity: 1; transform: translate(-50%, -50%) scaleX(1); }
+    20% { opacity: 0; }
+    30% { opacity: 0.8; }
+    100% { opacity: 0; }
+}
+
+.lightning-active {
+    animation: strike 0.3s ease-out forwards;
+}
+
+.math-highlight {
+    background: rgba(0, 0, 0, 0.6);
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    font-family: monospace;
+    font-size: 1.3rem;
+    color: #fff;
+    margin: 1.5rem auto;
+    max-width: fit-content;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.particle-node {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    background: rgba(0, 0, 0, 0.5);
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.particle-node.alice {
+    border-color: var(--quantum-pink);
+    box-shadow: 0 0 15px rgba(255, 0, 255, 0.3);
+}
+
+.particle-node.bob {
+    border-color: var(--accent-teal);
+    box-shadow: 0 0 15px rgba(0, 255, 159, 0.3);
+}
+
+.particle-connection {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem;
+    margin: 2rem 0;
+}
+
+.angle-slider-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.angle-slider-container label {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+}

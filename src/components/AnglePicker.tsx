@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import './AnglePicker.css';
 
 interface Props {
@@ -10,17 +11,40 @@ export const AnglePicker: React.FC<Props> = ({ angle, onChange }) => {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const svgRef = useRef<SVGSVGElement>(null);
+    const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({});
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+                // Also check if they clicked inside the popover itself
+                const popover = document.getElementById('angle-picker-popover');
+                if (popover && popover.contains(e.target as Node)) return;
+                
                 setIsOpen(false);
             }
         };
+        
+        const updatePosition = () => {
+            if (isOpen && containerRef.current) {
+                const rect = containerRef.current.getBoundingClientRect();
+                setPopoverStyle({
+                    top: rect.bottom + window.scrollY,
+                    left: rect.left + rect.width / 2 + window.scrollX,
+                });
+            }
+        };
+
         if (isOpen) {
             document.addEventListener('mousedown', handleClickOutside);
+            window.addEventListener('resize', updatePosition);
+            window.addEventListener('scroll', updatePosition, true);
+            updatePosition();
         }
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            window.removeEventListener('resize', updatePosition);
+            window.removeEventListener('scroll', updatePosition, true);
+        };
     }, [isOpen]);
 
     const handlePointerEvent = (e: React.PointerEvent<SVGSVGElement> | PointerEvent) => {
@@ -64,8 +88,8 @@ export const AnglePicker: React.FC<Props> = ({ angle, onChange }) => {
                 {angle}°
             </button>
             
-            {isOpen && (
-                <div className="angle-popover glass-panel">
+            {isOpen && createPortal(
+                <div id="angle-picker-popover" className="angle-popover glass-panel" style={{ ...popoverStyle, position: 'absolute', transform: 'translateX(-50%)' }}>
                     <div className="angle-dial">
                         <svg 
                             ref={svgRef}
@@ -91,7 +115,8 @@ export const AnglePicker: React.FC<Props> = ({ angle, onChange }) => {
                         />
                         <span>°</span>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );
