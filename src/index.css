@@ -585,3 +585,14 @@ input[type="number"]:focus {
     color: var(--quantum-pink);
     text-shadow: 0 0 5px var(--quantum-pink-dim);
 }
+
+@media (max-width: 768px) {
+    .mode-selector {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .mode-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+}

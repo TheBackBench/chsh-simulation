@@ -5,8 +5,7 @@ export type ConditionNode =
 
 export type ActionNode =
     | { type: 'RETURN', value: boolean }
-    | { type: 'PROB', prob: number } // prob from 0 to 100
-    | { type: 'MEASURE_SPIN', angle: number };
+    | { type: 'PROB', prob: number }; // prob from 0 to 100
 
 export type BlockNode =
     | { type: 'IF_ELSE', condition: ConditionNode | null, trueBranch: BlockNode | null, falseBranch: BlockNode | null }
@@ -126,23 +125,6 @@ function evaluateAST(
         const result = randVal < node.prob;
         if (player) executionTrace.push({ type: 'PROB', player, prob: node.prob, result, randVal });
         return result;
-    }
-
-    if (node.type === 'MEASURE_SPIN') {
-        if (pair && player) {
-            const wasFirst = pair.firstMeasured === null;
-            const measureResult = pair.measure(player, node.angle * (Math.PI / 180));
-            executionTrace.push({
-                type: 'MEASURE_SPIN',
-                player,
-                angle: node.angle,
-                result: measureResult,
-                isFirst: wasFirst,
-                hiddenVar: pair instanceof LHVPair ? pair.hiddenVar * (180 / Math.PI) : undefined
-            });
-            return measureResult;
-        }
-        return Math.random() < 0.5;
     }
 
     if (node.type === 'IF_ELSE') {

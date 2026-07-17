@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BlockNode, ConditionNode } from '../engine/Simulation';
 import { AnglePicker } from './AnglePicker';
+import { useMobileDrag } from './MobileDragContext';
 import './BlockBuilder.css';
 
 interface ProbInputProps {
@@ -50,6 +51,7 @@ interface Props {
 
 export const BlockBuilder: React.FC<Props> = ({ node, onChange }) => {
     const [isDragOver, setIsDragOver] = useState(false);
+    const mobileDrag = useMobileDrag();
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
@@ -63,12 +65,7 @@ export const BlockBuilder: React.FC<Props> = ({ node, onChange }) => {
         setIsDragOver(false);
     };
 
-    const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragOver(false);
-        const blockType = e.dataTransfer.getData('blockType');
-
+    const processBlockType = (blockType: string) => {
         switch (blockType) {
             case 'IF_ELSE':
                 onChange({ type: 'IF_ELSE', condition: null, trueBranch: null, falseBranch: null });
@@ -81,9 +78,6 @@ export const BlockBuilder: React.FC<Props> = ({ node, onChange }) => {
                 break;
             case 'RETURN_FALSE':
                 onChange({ type: 'RETURN', value: false });
-                break;
-            case 'MEASURE_SPIN':
-                onChange({ type: 'MEASURE_SPIN', angle: 0 });
                 break;
             case 'RECEIVED_1':
                 onChange({
@@ -120,16 +114,37 @@ export const BlockBuilder: React.FC<Props> = ({ node, onChange }) => {
         }
     };
 
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragOver(false);
+        const blockType = e.dataTransfer.getData('blockType');
+        processBlockType(blockType);
+    };
+
+    const handleClick = (e: React.MouseEvent) => {
+        if (window.innerWidth <= 768 && mobileDrag?.selectedBlock) {
+            e.stopPropagation();
+            processBlockType(mobileDrag.selectedBlock);
+            mobileDrag.setSelectedBlock(null);
+        }
+    };
+
     if (!node) {
         return (
             <div className="block-builder">
                 <div
-                    className={`block-slot ${isDragOver ? 'drag-over' : ''}`}
+                    className={`block-slot ${isDragOver ? 'drag-over' : ''} ${mobileDrag?.selectedBlock ? 'mobile-drop-ready' : ''}`}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
+                    onClick={handleClick}
                 >
-                    <span>Drag Block Here</span>
+                    <span>
+                        {window.innerWidth <= 768 
+                            ? (mobileDrag?.selectedBlock ? 'Tap to Place' : 'Select a block') 
+                            : 'Drag Block Here'}
+                    </span>
                 </div>
             </div>
         );
@@ -159,23 +174,6 @@ export const BlockBuilder: React.FC<Props> = ({ node, onChange }) => {
                             value={node.prob}
                             onChange={(val) => onChange({ ...node, prob: val })}
                         /> %
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    if (node.type === 'MEASURE_SPIN') {
-        return (
-            <div className="block-builder">
-                <div style={{ display: 'inline-block' }}>
-                    <div className="block block-action quantum-action">
-                        <button className="block-delete" onClick={() => onChange(null)}>✕</button>
-                        <strong>Measure Spin at Angle</strong>
-                        <AnglePicker
-                            angle={node.angle}
-                            onChange={(val) => onChange({ ...node, angle: val })}
-                        />
                     </div>
                 </div>
             </div>
@@ -213,6 +211,7 @@ export const BlockBuilder: React.FC<Props> = ({ node, onChange }) => {
 
 const ConditionBuilder: React.FC<{ condition: ConditionNode | null, onChange: (cond: ConditionNode | null) => void }> = ({ condition, onChange }) => {
     const [isDragOver, setIsDragOver] = useState(false);
+    const mobileDrag = useMobileDrag();
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
@@ -226,12 +225,7 @@ const ConditionBuilder: React.FC<{ condition: ConditionNode | null, onChange: (c
         setIsDragOver(false);
     };
 
-    const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragOver(false);
-        const blockType = e.dataTransfer.getData('blockType');
-
+    const processConditionType = (blockType: string) => {
         switch (blockType) {
             case 'RECEIVED_1':
                 onChange({ type: 'RECEIVED', expected: 1 });
@@ -245,6 +239,22 @@ const ConditionBuilder: React.FC<{ condition: ConditionNode | null, onChange: (c
             case 'MEASURE_SPIN_COND':
                 onChange({ type: 'MEASURE_SPIN_COND', angle: 0, expected: true });
                 break;
+        }
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragOver(false);
+        const blockType = e.dataTransfer.getData('blockType');
+        processConditionType(blockType);
+    };
+
+    const handleClick = (e: React.MouseEvent) => {
+        if (window.innerWidth <= 768 && mobileDrag?.selectedBlock) {
+            e.stopPropagation();
+            processConditionType(mobileDrag.selectedBlock);
+            mobileDrag.setSelectedBlock(null);
         }
     };
 
@@ -303,12 +313,17 @@ const ConditionBuilder: React.FC<{ condition: ConditionNode | null, onChange: (c
     if (!condition) {
         return (
             <div
-                className={`block-slot block-slot-inline ${isDragOver ? 'drag-over' : ''}`}
+                className={`block-slot block-slot-inline ${isDragOver ? 'drag-over' : ''} ${mobileDrag?.selectedBlock ? 'mobile-drop-ready' : ''}`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
+                onClick={handleClick}
             >
-                <span>Drop Condition</span>
+                <span>
+                    {window.innerWidth <= 768 
+                        ? (mobileDrag?.selectedBlock ? 'Tap to Place' : 'Select Condition') 
+                        : 'Drop Condition'}
+                </span>
             </div>
         );
     }

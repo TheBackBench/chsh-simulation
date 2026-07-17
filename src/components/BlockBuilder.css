@@ -228,3 +228,22 @@ input[type="number"].block-input {
     text-align: center;
     justify-content: center;
 }
+
+.mobile-selected-block {
+    box-shadow: 0 0 0 3px var(--accent-teal), 0 0 15px var(--accent-teal) !important;
+    transform: scale(1.05);
+    z-index: 10;
+}
+
+.mobile-drop-ready {
+    animation: pulse-drop 1.5s infinite;
+    cursor: pointer !important;
+    border-color: var(--accent-teal) !important;
+    background: rgba(var(--accent-teal-rgb), 0.1) !important;
+}
+
+@keyframes pulse-drop {
+    0% { box-shadow: 0 0 0 0 rgba(79, 172, 254, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(79, 172, 254, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(79, 172, 254, 0); }
+}

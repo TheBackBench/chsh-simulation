@@ -1,6 +1,7 @@
 import React from 'react';
 import { QuantumStrategy, BlockNode } from '../engine/Simulation';
 import { BlockBuilder } from './BlockBuilder';
+import { MobileDragProvider, useMobileDrag } from './MobileDragContext';
 import './QuantumSandbox.css';
 
 interface Props {
@@ -10,15 +11,25 @@ interface Props {
 }
 
 const DraggableBlock: React.FC<{ type: string, label: string, className: string, title?: string }> = ({ type, label, className, title }) => {
+    const { selectedBlock, setSelectedBlock } = useMobileDrag();
+    const isSelected = selectedBlock === type;
+
+    const handleClick = () => {
+        if (window.innerWidth <= 768) {
+            setSelectedBlock(isSelected ? null : type);
+        }
+    };
+
     return (
         <div className={title ? 'has-tooltip' : ''} data-tooltip={title} style={{ display: 'inline-block', margin: '4px' }}>
             <div
-                className={`block ${className}`}
+                className={`block ${className} ${isSelected ? 'mobile-selected-block' : ''}`}
                 style={{ cursor: 'grab', fontSize: '0.9rem', width: '150px', textAlign: 'center', justifyContent: 'center' }}
                 draggable
                 onDragStart={(e) => {
                     e.dataTransfer.setData('blockType', type);
                 }}
+                onClick={handleClick}
             >
                 {label}
             </div>
@@ -86,7 +97,8 @@ export const QuantumSandbox: React.FC<Props> = ({ strategy, setStrategy, isActiv
     };
 
     return (
-        <section id="quantum-sandbox" className="sandbox active">
+        <MobileDragProvider>
+            <section id="quantum-sandbox" className="sandbox active">
 
             <div className="palette glass-panel" style={{ padding: '1.25rem', marginBottom: '2rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
@@ -196,6 +208,7 @@ export const QuantumSandbox: React.FC<Props> = ({ strategy, setStrategy, isActiv
                 </div>
             </div>
 
-        </section>
+            </section>
+        </MobileDragProvider>
     );
 };
