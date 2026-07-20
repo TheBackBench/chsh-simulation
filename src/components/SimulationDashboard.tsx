@@ -880,7 +880,7 @@ export const SimulationDashboard: React.FC<Props> = ({
 
             {playState === 'finished' ? (
                 <div className="dashboard-content finished-layout" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                    <div style={{ display: 'flex', gap: '2rem', width: '100%' }}>
+                    <div className="responsive-row" style={{ display: 'flex', gap: '2rem', width: '100%' }}>
                         <div className="pane glass-panel stats-pane finished-stats" style={{ flex: 1 }}>
                             <h3 style={{ textAlign: 'center', marginBottom: '1rem', color: 'var(--accent-teal)' }}>{mode === 'quantum' ? 'True Entanglement' : 'Simulation Stats'}</h3>
                             <div className="finished-stat-grid">
@@ -915,7 +915,7 @@ export const SimulationDashboard: React.FC<Props> = ({
                     </div>
 
                     {mode === 'quantum' && compareClassical && (
-                        <div style={{ display: 'flex', gap: '2rem', width: '100%' }}>
+                        <div className="responsive-row" style={{ display: 'flex', gap: '2rem', width: '100%' }}>
                             <div className="pane glass-panel stats-pane finished-stats" style={{ flex: 1 }}>
                                 <h3 style={{ textAlign: 'center', marginBottom: '1rem', color: 'var(--text-muted)' }}>Hidden Variable</h3>
                                 <div className="finished-stat-grid">
@@ -956,9 +956,9 @@ export const SimulationDashboard: React.FC<Props> = ({
             ) : (
                 <div className="dashboard-content-rows" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', flex: 1, minHeight: 0 }}>
                     {/* Top Row: True Entanglement Sim/Graph & Controls/Rules */}
-                    <div style={{ display: 'flex', gap: '1.5rem', flex: 1, minHeight: 0 }}>
+                    <div className="responsive-row" style={{ display: 'flex', gap: '1.5rem', flex: 1, minHeight: 0 }}>
                         {/* Left Top Column: Controls & True Entanglement Simulation */}
-                        <div style={{ flex: 1.6, display: 'flex', flexDirection: 'column', gap: '1.5rem', minWidth: 0 }}>
+                        <div className="responsive-col-left" style={{ flex: 1.6, display: 'flex', flexDirection: 'column', gap: '1.5rem', minWidth: 0 }}>
                             <div className="pane glass-panel controls-window" style={{ padding: '1rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div className="turn-counter" style={{ position: 'static' }}>Turn {round} / {nGames}</div>
                                 <div className="controls" style={{ margin: 0 }}>
@@ -981,7 +981,7 @@ export const SimulationDashboard: React.FC<Props> = ({
                         </div>
 
                         {/* Right Top Column: Rules & True Entanglement Graph */}
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem', minWidth: 0 }}>
+                        <div className="responsive-col-right" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem', minWidth: 0 }}>
                             <div className="pane glass-panel rules-pane">
                                 <h3>Score Rules</h3>
                                 <table className="rules-table">
@@ -1057,8 +1057,8 @@ export const SimulationDashboard: React.FC<Props> = ({
 
                     {/* Bottom Row: Hidden Variable Sim & Graph */}
                     {mode === 'quantum' && compareClassical && (
-                        <div style={{ display: 'flex', gap: '1.5rem', flex: 1, minHeight: 0 }}>
-                            <div style={{ flex: 1.6, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                        <div className="responsive-row" style={{ display: 'flex', gap: '1.5rem', flex: 1, minHeight: 0 }}>
+                            <div className="responsive-col-left" style={{ flex: 1.6, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                                 <div className="pane glass-panel no-ent-live-window" style={{ position: 'relative', display: 'flex', flexDirection: 'column', padding: '1.5rem', flex: 1, minHeight: 0 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                                         <h4 style={{ margin: 0, color: 'var(--text-muted)' }}>Hidden Variable</h4>
@@ -1068,7 +1068,7 @@ export const SimulationDashboard: React.FC<Props> = ({
                                     </div>
                                 </div>
                             </div>
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                            <div className="responsive-col-right" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                                 <div className="pane glass-panel graph-pane" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, minHeight: 0 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <h3 style={{ margin: 0, color: 'var(--text-muted)' }}>Hidden Variable</h3>
